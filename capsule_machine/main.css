@@ -297,12 +297,6 @@ button {
   margin-right: 10px;
 }
 
-.release {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-}
-
 .button-wrapper {
   position: absolute;
   left: 20px;
