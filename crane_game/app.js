@@ -2,7 +2,7 @@
 function init() { 
 
   const settings = {
-    capsuleNo: 5,
+    capsuleNo: 10,
     flapRotate: 0,
   }
 
@@ -169,7 +169,8 @@ function init() {
     data.velocity.setAngle(degToRad(90))
     data.setXy({
       x: randomN(machineWidth - 32), 
-      y: randomN(machineHeight - 250), 
+      // y: randomN(machineHeight - 250), 
+      y: 0
     })
 
     // gravity
@@ -239,20 +240,31 @@ function init() {
   const spaceOutCapsules = c => {
     capsuleData.forEach(c2 =>{
       // console.log('test', c.el.dataset.id )
-      if (c.el.dataset.id === c2.el.dataset.id || c2.selected) return
+      if (c.id === c2.id || c2.selected) return
       const distanceBetweenCapsules = distanceBetween(c, c2)
+      const overlap = distanceBetweenCapsules - (c.radius * 2)
+
+      // if (c.el.dataset.id === c2.el.dataset.id && distanceBetweenCapsules < (c.radius * 2)) {
+      //   c.setXy(
+      //     getNewPosBasedOnTarget({
+      //       start: c,
+      //       target: c2,
+      //       distance: 32, 
+      //       fullDistance: distanceBetweenCapsules
+      //     })
+      //   )
+      // } else 
       if (distanceBetweenCapsules < (c.radius * 2)) {
-        c.velocity.multiplyBy(-0.6)
-        const overlap = distanceBetweenCapsules - (c.radius * 2)
-        c.setXy(
-          getNewPosBasedOnTarget({
-            start: c,
-            target: c2,
-            distance: overlap / 2, 
-            fullDistance: distanceBetweenCapsules
-          })
-        )
-      }
+          c.velocity.multiplyBy(-0.6)
+          c.setXy(
+            getNewPosBasedOnTarget({
+              start: c,
+              target: c2,
+              distance: overlap / 2, 
+              fullDistance: distanceBetweenCapsules
+            })
+          )
+        }
     })
   }
 
