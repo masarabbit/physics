@@ -41,6 +41,7 @@ p, h1, h2, h3, h4 {
 .machine {
   position: relative;
   width: 600px;
+  width: 320px;
   height: 500px; 
   --m: 4;
   --w: 80px;
@@ -78,6 +79,32 @@ p, h1, h2, h3, h4 {
   border: 1px solid blue;
   width: 80px;
   height: 80px;
+}
+
+.mini-toy {
+  position: absolute;
+  border: 1px solid blue;
+  /* width: 30px;
+  height: 30px; */
+  width: 0;
+  height: 0;
+}
+
+.mini-toy:after {
+  position: absolute;
+  content: '';
+  margin-top: -15px;
+  margin-left: -15px;
+  border: 1px solid blue;
+  width: 30px;
+  height: 30px;
+}
+
+.connector {
+  position: absolute;
+  height: 1px;
+  width: 0;
+  border-top: solid #ff3636 1px;
 }
 
 .capsule {

@@ -215,7 +215,6 @@ function init() {
     })
     elements.capsuleMachine.classList.add('shake')
     setTimeout(()=> elements.capsuleMachine.classList.remove('shake'), 500)
-
   }
 
   const rotateLines = angles => {

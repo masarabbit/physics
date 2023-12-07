@@ -2,8 +2,10 @@
 function init() { 
 
   const settings = {
-    capsuleNo: 10,
+    // toyNo: 4,
     flapRotate: 0,
+    toyColumn: 2,
+    toyRow: 2
   }
 
   const elements = {
@@ -61,6 +63,9 @@ function init() {
     }
   }
 
+  const calcX = i => i % settings.toyColumn
+  const calcY = i => Math.floor(i / settings.toyColumn)
+
   const px = num => `${num}px`
   const randomN = max => Math.ceil(Math.random() * max)
   const degToRad = deg => deg / (180 / Math.PI)
@@ -72,8 +77,9 @@ function init() {
   // const calcCollectedY = () => Math.floor(settings.collectedNo / 10) * 32
   // const nearest360 = n => n === 0 ? 0 : (n - 1) + Math.abs(((n - 1) % 360) - 360)
 
-  const setStyles = ({ el, x, y, w, deg }) =>{
-    if (w) el.style.width = w
+  const setStyles = ({ el, x, y, w, h, deg }) =>{
+    if (w) el.style.width = px(w)
+    if (h) el.style.height = px(h)
     el.style.transform = `translate(${x ? px(x) : 0}, ${y ? px(y) : 0}) rotate(${deg || 0}deg)`
   }
 
@@ -101,25 +107,60 @@ function init() {
     }
   ]
 
+  const toys = new Array(settings.toyRow * settings.toyColumn).fill('').map((_, i) => {
+    const x = calcX(i) * 40 + 20
+    const y = calcY(i) * 40 + 20
+    return {
+      el: Object.assign(document.createElement('div'), 
+        { className: 'mini-toy' }),
+      x, y,
+      right: calcX(i) + 1 === settings.toyColumn ? null : {
+        el: Object.assign(document.createElement('div'), { className: 'connector' }),
+        x, y,
+        w: 10,
+      },
+      down: calcY(i) + 1 === settings.toyRow ? null : {
+        el: Object.assign(document.createElement('div'), { className: 'connector' }),
+        x, y,
+        w: 10,
+      }
+    }
+  })
+
+  console.log(toys)
+  toys.forEach(toy => {
+    setStyles(toy)
+    elements.machine.appendChild(toy.el)
+    if (toy.right) {
+      setStyles(toy.right) 
+      elements.machine.appendChild(toy.right.el)
+    }
+    if (toy.down) {
+      setStyles(toy.down)
+      elements.machine.appendChild(toy.down.el)
+    }
+  })
 
 
-  new Array(settings.capsuleNo).fill('').forEach((_, i) => {
-    const toy = Object.assign(document.createElement('div'), 
-    { className: 'toy',
-      innerHTML: `
-      <div class="capsule-wrapper pix" data-id="${i}">
-        <div class="capsule"></div>
-      </div>
-      <div class="capsule-wrapper pix" data-id="${i}">
-        <div class="capsule"></div>
-      </div>
-      <div class="capsule-wrapper pix" data-id="${i}">
-        <div class="capsule"></div>
-      </div>
-      `
-  })
-    elements.machine.appendChild(toy)
-  })
+  // new Array(settings.toyNo).fill('').forEach((_, i) => {
+  //   const toy = Object.assign(document.createElement('div'), 
+  //   { className: 'toy',
+  //     innerHTML: `
+  //     <div class="capsule-wrapper pix" data-id="${i}">
+  //       <div class="capsule"></div>
+  //     </div>
+  //     <div class="capsule-wrapper pix" data-id="${i}">
+  //       <div class="capsule"></div>
+  //     </div>
+  //     <div class="capsule-wrapper pix" data-id="${i}">
+  //       <div class="capsule"></div>
+  //     </div>
+  //     `
+  // })
+  //   elements.machine.appendChild(toy)
+  // })
+
+
   lineData.forEach(() => {
     ;[
       Object.assign(document.createElement('div'), 
@@ -175,6 +216,7 @@ function init() {
 
     // gravity
     data.acceleration = data.create(0, 4)  
+    // data.acceleration.setAngle(degToRad(270))
     data.accelerate = function(acceleration) {
       this.velocity.addTo(acceleration)
     }
@@ -237,34 +279,53 @@ function init() {
   }
 
 
+  // const spaceOutCapsules = c => {
+  //   capsuleData.forEach(c2 =>{
+  //     // console.log('test', c.el.dataset.id )
+  //     if (c.id === c2.id || c2.selected) return
+  //     const distanceBetweenCapsules = distanceBetween(c, c2)
+  //     const overlap = distanceBetweenCapsules - (c.radius * 2)
+
+  //     // if (c.el.dataset.id === c2.el.dataset.id && distanceBetweenCapsules < (c.radius * 2)) {
+  //     //   c.setXy(
+  //     //     getNewPosBasedOnTarget({
+  //     //       start: c,
+  //     //       target: c2,
+  //     //       distance: 32, 
+  //     //       fullDistance: distanceBetweenCapsules
+  //     //     })
+  //     //   )
+  //     // } else 
+  //     if (distanceBetweenCapsules < (c.radius * 2)) {
+  //         c.velocity.multiplyBy(-0.6)
+  //         c.setXy(
+  //           getNewPosBasedOnTarget({
+  //             start: c,
+  //             target: c2,
+  //             distance: overlap / 2, 
+  //             fullDistance: distanceBetweenCapsules
+  //           })
+  //         )
+  //       }
+  //   })
+  // }
+
   const spaceOutCapsules = c => {
     capsuleData.forEach(c2 =>{
-      // console.log('test', c.el.dataset.id )
       if (c.id === c2.id || c2.selected) return
       const distanceBetweenCapsules = distanceBetween(c, c2)
-      const overlap = distanceBetweenCapsules - (c.radius * 2)
-
-      // if (c.el.dataset.id === c2.el.dataset.id && distanceBetweenCapsules < (c.radius * 2)) {
-      //   c.setXy(
-      //     getNewPosBasedOnTarget({
-      //       start: c,
-      //       target: c2,
-      //       distance: 32, 
-      //       fullDistance: distanceBetweenCapsules
-      //     })
-      //   )
-      // } else 
       if (distanceBetweenCapsules < (c.radius * 2)) {
-          c.velocity.multiplyBy(-0.6)
-          c.setXy(
-            getNewPosBasedOnTarget({
-              start: c,
-              target: c2,
-              distance: overlap / 2, 
-              fullDistance: distanceBetweenCapsules
-            })
-          )
-        }
+        c.velocity.multiplyBy(-0.6)
+        const overlap = distanceBetweenCapsules - (c.radius * 2)
+        c.setXy(
+          getNewPosBasedOnTarget({
+            start: c,
+            target: c2,
+            distance: overlap / 2, 
+            fullDistance: distanceBetweenCapsules
+          })
+        )
+      }
     })
   }
 
@@ -346,7 +407,8 @@ function init() {
 
 
   updateLines()
-  setInterval(animateCapsules, 30)
+  // setInterval(animateCapsules, 100)
+  // setInterval(animateCapsules, 30)
 
 }
   
