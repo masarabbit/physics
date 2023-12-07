@@ -4,8 +4,8 @@ function init() {
   const settings = {
     // toyNo: 4,
     flapRotate: 0,
-    toyColumn: 2,
-    toyRow: 2
+    toyColumn: 3,
+    toyRow: 3
   }
 
   const elements = {
@@ -78,8 +78,8 @@ function init() {
   // const nearest360 = n => n === 0 ? 0 : (n - 1) + Math.abs(((n - 1) % 360) - 360)
 
   const setStyles = ({ el, x, y, w, h, deg }) =>{
-    if (w) el.style.width = px(w)
-    if (h) el.style.height = px(h)
+    if (w) el.style.width = w
+    if (h) el.style.height = h
     el.style.transform = `translate(${x ? px(x) : 0}, ${y ? px(y) : 0}) rotate(${deg || 0}deg)`
   }
 
@@ -116,13 +116,9 @@ function init() {
       x, y,
       right: calcX(i) + 1 === settings.toyColumn ? null : {
         el: Object.assign(document.createElement('div'), { className: 'connector' }),
-        x, y,
-        w: 10,
       },
       down: calcY(i) + 1 === settings.toyRow ? null : {
         el: Object.assign(document.createElement('div'), { className: 'connector' }),
-        x, y,
-        w: 10,
       }
     }
   })
@@ -131,15 +127,24 @@ function init() {
   toys.forEach(toy => {
     setStyles(toy)
     elements.machine.appendChild(toy.el)
-    if (toy.right) {
-      setStyles(toy.right) 
-      elements.machine.appendChild(toy.right.el)
-    }
-    if (toy.down) {
-      setStyles(toy.down)
-      elements.machine.appendChild(toy.down.el)
-    }
   })
+
+  const updateConnectors = () => {
+    toys.forEach((toy, i) => {
+      if (toy.right) {
+        toy.right.w = px(distanceBetween(toy, toys[i + 1]))
+        toy.right.deg = radToDeg(angleTo({ a: toy, b: toys[i + 1] })) 
+        setStyles(toy.right) 
+        elements.machine.appendChild(toy.right.el)
+      }
+      if (toy.down) {
+        toy.down.w = px(distanceBetween(toy, toys[i + settings.toyColumn]))
+        toy.down.deg = radToDeg(angleTo({ a: toy, b: toys[i + settings.toyColumn] })) 
+        setStyles(toy.down)
+        elements.machine.appendChild(toy.down.el)
+      }
+    })
+  }
 
 
   // new Array(settings.toyNo).fill('').forEach((_, i) => {
@@ -194,25 +199,27 @@ function init() {
     })
   }
 
-  const capsuleData = Array.from(document.querySelectorAll('.capsule-wrapper')).map((c, i) => {
+  const toyData = Array.from(document.querySelectorAll('.mini-toy')).map((c, i) => {
     const data = {
       ...vector,
-      el: c,
+      ...toys[i],
       id: i,
       deg: 0,
       radius: 16, // actual radius should be 32, but setting it higher
       bounce: -0.5, // this reduces the velocity gradually
       friction: 0.99,
+      // right: c.right,
+      // down: c.down
     }
 
     data.velocity = data.create(0, 1)  //? velocity is another vector
     data.velocity.setLength(10)
     data.velocity.setAngle(degToRad(90))
-    data.setXy({
-      x: randomN(machineWidth - 32), 
-      // y: randomN(machineHeight - 250), 
-      y: 0
-    })
+    // data.setXy({
+    //   x: randomN(machineWidth - 32), 
+    //   // y: randomN(machineHeight - 250), 
+    //   y: 0
+    // })
 
     // gravity
     data.acceleration = data.create(0, 4)  
@@ -280,7 +287,7 @@ function init() {
 
 
   // const spaceOutCapsules = c => {
-  //   capsuleData.forEach(c2 =>{
+  //   toyData.forEach(c2 =>{
   //     // console.log('test', c.el.dataset.id )
   //     if (c.id === c2.id || c2.selected) return
   //     const distanceBetweenCapsules = distanceBetween(c, c2)
@@ -311,7 +318,7 @@ function init() {
   // }
 
   const spaceOutCapsules = c => {
-    capsuleData.forEach(c2 =>{
+    toyData.forEach(c2 =>{
       if (c.id === c2.id || c2.selected) return
       const distanceBetweenCapsules = distanceBetween(c, c2)
       if (distanceBetweenCapsules < (c.radius * 2)) {
@@ -378,7 +385,7 @@ function init() {
 
 
   const animateCapsules = () => {
-    capsuleData.forEach((c, i) => {
+    toyData.forEach((c, i) => {
       if (c.selected) return
       c.prevX = c.x
       c.prevY = c.y
@@ -400,15 +407,32 @@ function init() {
           c.deg += (c.x - c.prevX) * 2
         }
       }
-      setStyles(capsuleData[i])
+      setStyles(toyData[i])
+
+
+      if (c.right) {
+        c.right.x = c.x
+        c.right.y = c.y
+        c.right.w = px(distanceBetween(c, toyData[i + 1]))
+        c.right.deg = radToDeg(angleTo({ a: c, b: toyData[i + 1] })) 
+        setStyles(c.right) 
+      }
+      if (c.down) {
+        c.down.x = c.x
+        c.down.y = c.y
+        c.down.w = px(distanceBetween(c, toyData[i + settings.toyColumn]))
+        c.down.deg = radToDeg(angleTo({ a: c, b: toyData[i + settings.toyColumn] })) 
+        setStyles(c.down)
+      }
     })
   }
 
 
 
   updateLines()
+  updateConnectors()
   // setInterval(animateCapsules, 100)
-  // setInterval(animateCapsules, 30)
+  setInterval(animateCapsules, 30)
 
 }
   
