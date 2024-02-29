@@ -5,7 +5,8 @@ function init() {
     // toyNo: 4,
     flapRotate: 0,
     toyColumn: 3,
-    toyRow: 3
+    toyRow: 3,
+    k: 0.01
   }
 
   const elements = {
@@ -47,6 +48,9 @@ function init() {
       this.x += v2.x
       this.y += v2.y
     },
+    subtract: function(v2) {
+      return this.create(this.x - v2.x, this.y - v2.y)
+    },
     multiplyBy: function(n) {
       this.x *= n
       this.y *= n
@@ -72,10 +76,7 @@ function init() {
   const radToDeg = rad => Math.round(rad * (180 / Math.PI))
   const angleTo = ({ a, b }) => Math.atan2(b.y - a.y, b.x - a.x)
   const distanceBetween = (a, b) => Math.round(Math.sqrt(Math.pow((a.x - b.x), 2) + Math.pow((a.y - b.y), 2)))
-  // const getPage = (e, type) => e.type[0] === 'm' ? e[`page${type}`] : e.touches[0][`page${type}`]
-  // const calcCollectedX = () => settings.collectedNo % 10 * 32
-  // const calcCollectedY = () => Math.floor(settings.collectedNo / 10) * 32
-  // const nearest360 = n => n === 0 ? 0 : (n - 1) + Math.abs(((n - 1) % 360) - 360)
+
 
   const setStyles = ({ el, x, y, w, h, deg }) =>{
     if (w) el.style.width = w
@@ -86,7 +87,7 @@ function init() {
   const lineData = [
     {
       start: { x: 0, y: 280 },
-      end: { x: 160, y: 360 },
+      end: { x: 160, y: 280 },
       point: 'end', 
       axis: 'start',
       id: 'flap_1'
@@ -107,6 +108,8 @@ function init() {
     }
   ]
 
+  const addConnector = () => Object.assign(document.createElement('div'), { className: 'connector' })
+
   const toys = new Array(settings.toyRow * settings.toyColumn).fill('').map((_, i) => {
     const x = calcX(i) * 40 + 20
     const y = calcY(i) * 40 + 20
@@ -114,12 +117,10 @@ function init() {
       el: Object.assign(document.createElement('div'), 
         { className: 'mini-toy' }),
       x, y,
-      right: calcX(i) + 1 === settings.toyColumn ? null : {
-        el: Object.assign(document.createElement('div'), { className: 'connector' }),
-      },
-      down: calcY(i) + 1 === settings.toyRow ? null : {
-        el: Object.assign(document.createElement('div'), { className: 'connector' }),
-      }
+      dUp: calcY(i) > 0 && calcX(i) + 1 < settings.toyColumn ? { el: addConnector() } : null,
+      right: calcX(i) + 1 === settings.toyColumn ? null : { el: addConnector() },
+      down: calcY(i) + 1 === settings.toyRow ? null : { el: addConnector() },
+      dDown: calcY(i) + 1 < settings.toyColumn && calcX(i) + 1 < settings.toyColumn ? { el: addConnector() } : null,
     }
   })
 
@@ -131,6 +132,12 @@ function init() {
 
   const updateConnectors = () => {
     toys.forEach((toy, i) => {
+      if (toy.dUp) {
+        toy.dUp.w = px(distanceBetween(toy, toys[i - settings.toyColumn + 1]))
+        toy.dUp.deg = radToDeg(angleTo({ a: toy, b: toys[i - settings.toyColumn + 1] })) 
+        setStyles(toy.dUp) 
+        elements.machine.appendChild(toy.dUp.el)
+      }
       if (toy.right) {
         toy.right.w = px(distanceBetween(toy, toys[i + 1]))
         toy.right.deg = radToDeg(angleTo({ a: toy, b: toys[i + 1] })) 
@@ -143,27 +150,15 @@ function init() {
         setStyles(toy.down)
         elements.machine.appendChild(toy.down.el)
       }
+      if (toy.dDown) {
+        toy.dDown.w = px(distanceBetween(toy, toys[i + settings.toyColumn + 1]))
+        toy.dDown.deg = radToDeg(angleTo({ a: toy, b: toys[i + settings.toyColumn + 1] })) 
+        setStyles(toy.dDown) 
+        elements.machine.appendChild(toy.dDown.el)
+      }
     })
   }
 
-
-  // new Array(settings.toyNo).fill('').forEach((_, i) => {
-  //   const toy = Object.assign(document.createElement('div'), 
-  //   { className: 'toy',
-  //     innerHTML: `
-  //     <div class="capsule-wrapper pix" data-id="${i}">
-  //       <div class="capsule"></div>
-  //     </div>
-  //     <div class="capsule-wrapper pix" data-id="${i}">
-  //       <div class="capsule"></div>
-  //     </div>
-  //     <div class="capsule-wrapper pix" data-id="${i}">
-  //       <div class="capsule"></div>
-  //     </div>
-  //     `
-  // })
-  //   elements.machine.appendChild(toy)
-  // })
 
 
   lineData.forEach(() => {
@@ -241,81 +236,7 @@ function init() {
   }
 
 
-  const rotateLines = angles => {
-    angles.forEach((angle, i) => {
-      const { axis, point } = lineData[i]
-      lineData[i][point] = rotatePoint({ 
-        angle,
-        axis: lineData[i][axis],
-        point: lineData[i][point]
-      })
-    })
-  }
 
-  const openFlap = () => {
-    if (settings.flapRotate > -20) {
-      settings.flapRotate-= 2
-      rotateLines([ 2, -2, -4 ])
-      updateLines()
-      setTimeout(openFlap, 30)
-    } else {
-      setTimeout(closeFlap, 800)
-    }
-  }
-
-
-  const closeFlap = () => {
-    if (settings.flapRotate < 0) {
-      settings.flapRotate+= 1
-      if (settings.flapRotate === 0) {
-        [
-          { x: 160, y: 360 },
-          { x: 160, y: 360 },
-          { x: 70, y: 340 },
-        ].forEach((item, i) => {
-          lineData[i][lineData[i].point].x = item.x
-          lineData[i][lineData[i].point].y = item.y
-        })
-        settings.isHandleLocked = false
-      } else {
-        rotateLines([ -1, 1, 2 ])
-      }
-      updateLines()
-      setTimeout(closeFlap, 30)
-    }
-  }
-
-
-  // const spaceOutCapsules = c => {
-  //   toyData.forEach(c2 =>{
-  //     // console.log('test', c.el.dataset.id )
-  //     if (c.id === c2.id || c2.selected) return
-  //     const distanceBetweenCapsules = distanceBetween(c, c2)
-  //     const overlap = distanceBetweenCapsules - (c.radius * 2)
-
-  //     // if (c.el.dataset.id === c2.el.dataset.id && distanceBetweenCapsules < (c.radius * 2)) {
-  //     //   c.setXy(
-  //     //     getNewPosBasedOnTarget({
-  //     //       start: c,
-  //     //       target: c2,
-  //     //       distance: 32, 
-  //     //       fullDistance: distanceBetweenCapsules
-  //     //     })
-  //     //   )
-  //     // } else 
-  //     if (distanceBetweenCapsules < (c.radius * 2)) {
-  //         c.velocity.multiplyBy(-0.6)
-  //         c.setXy(
-  //           getNewPosBasedOnTarget({
-  //             start: c,
-  //             target: c2,
-  //             distance: overlap / 2, 
-  //             fullDistance: distanceBetweenCapsules
-  //           })
-  //         )
-  //       }
-  //   })
-  // }
 
   const spaceOutCapsules = c => {
     toyData.forEach(c2 =>{
@@ -328,13 +249,17 @@ function init() {
           getNewPosBasedOnTarget({
             start: c,
             target: c2,
-            distance: overlap / 2, 
+            distance: (overlap / 2), 
             fullDistance: distanceBetweenCapsules
           })
         )
       }
     })
   }
+
+  // const dotProduct = ({ a, b }) => {
+  //   return (((a.x - b.start.x) * (b.end.x - b.start.x)) + ((a.y - b.start.y) * (l.end.y - l.start.y))) / Math.pow(l.length, 2)
+  // }
 
   const hitCheckLines = c => {
     lineData.forEach(l => {
@@ -383,6 +308,16 @@ function init() {
     }
   }
 
+  const dotProduct = ({ a, b }) => {
+    return (a.x * b.x) + (a.y * b.y)
+  }
+
+
+  const maxDistance = 20
+
+  const isWithinDistance = distance => {
+    return distance > 20 && distance < 50
+  }
 
   const animateCapsules = () => {
     toyData.forEach((c, i) => {
@@ -407,34 +342,81 @@ function init() {
           c.deg += (c.x - c.prevX) * 2
         }
       }
-      setStyles(toyData[i])
+  
 
+      if (c.dUp) {
+        c.dUp.x = c.x
+        c.dUp.y = c.y
+        const distance = distanceBetween(c, toyData[i - settings.toyColumn + 1])
+        c.dUp.w = px(distance)
+        c.dUp.deg = radToDeg(angleTo({ a: c, b: toyData[i - settings.toyColumn + 1] })) 
+  
+        if (isWithinDistance(distance)) {
+          const d = c.subtract(toyData[i - settings.toyColumn + 1])
+          const springForce = d.multiply(settings.k)
+          c.velocity.addTo(springForce)
+        }
 
+        setStyles(c.dUp)
+      }
       if (c.right) {
         c.right.x = c.x
         c.right.y = c.y
-        c.right.w = px(distanceBetween(c, toyData[i + 1]))
+        const distance = distanceBetween(c, toyData[i + 1])
+        c.right.w = px(distance)
         c.right.deg = radToDeg(angleTo({ a: c, b: toyData[i + 1] })) 
+
+        if (isWithinDistance(distance)) {
+          const d = c.subtract(toyData[i + 1])
+          const springForce = d.multiply(settings.k)
+          c.velocity.addTo(springForce)
+        }
+
+
         setStyles(c.right) 
       }
       if (c.down) {
         c.down.x = c.x
         c.down.y = c.y
-        c.down.w = px(distanceBetween(c, toyData[i + settings.toyColumn]))
+        const distance = distanceBetween(c, toyData[i + settings.toyColumn])
+        c.down.w = px(distance)
         c.down.deg = radToDeg(angleTo({ a: c, b: toyData[i + settings.toyColumn] })) 
+
+        if (isWithinDistance(distance)) {
+          const d = c.subtract(toyData[i + settings.toyColumn])
+          const springForce = d.multiply(settings.k)
+          c.velocity.addTo(springForce)
+        }
         setStyles(c.down)
       }
+      if (c.dDown) {
+        c.dDown.x = c.x
+        c.dDown.y = c.y
+        const distance = distanceBetween(c, toyData[i + settings.toyColumn + 1])
+        c.dDown.w = px(distance)
+        c.dDown.deg = radToDeg(angleTo({ a: c, b: toyData[i + settings.toyColumn + 1] })) 
+        
+        if (isWithinDistance(distance)) {
+          const d = c.subtract(toyData[i + settings.toyColumn + 1])
+          const springForce = d.multiply(settings.k)
+          c.velocity.addTo(springForce)
+        }
+        setStyles(c.dDown)
+      }
+
+      setStyles(toyData[i])
     })
   }
 
 
-
   updateLines()
   updateConnectors()
-  // setInterval(animateCapsules, 100)
-  setInterval(animateCapsules, 30)
+
+  setInterval(animateCapsules, 40)
+
 
 }
   
 window.addEventListener('DOMContentLoaded', init)
+
 
