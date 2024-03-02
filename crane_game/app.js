@@ -32,15 +32,16 @@ function init() {
     flapRotate: 0,
     toyColumn: 3,
     toyRow: 3,
-    k: 0.08,
+    k: 0.2,
     blocks: [],
     interval: null,
     blockIsLifted: false
   }
 
   const blockShape = [
-    [1, 1],
-    [1, 1]
+    [1, 1, 1],
+    [1, 1, 1],
+    [1, 1, 1],
   ]
 
   const elements = {
@@ -72,6 +73,9 @@ function init() {
       this.x = Math.cos(angle) * length
       this.y = Math.sin(angle) * length
     },
+    getLength: function() {
+      return Math.sqrt(this.x * this.x + this.y * this.y);
+    },
     magnitude: function() {
       return Math.sqrt(this.x * this.x + this.y * this.y)
     },
@@ -97,12 +101,12 @@ function init() {
   const createBlock = ({ shape, x, y }) => {
     const block = {
       ...vector,
-      el: Object.assign(document.createElement('div'), { className: `block ${['yellow', 'blue', 'green', 'purple'][id]}`}),
-      x: x * 30, 
-      y: y * 30,
+      el: Object.assign(document.createElement('div'), { className: `block ${['yellow', 'blue', 'green', 'purple']?.[id]}`}),
+      x: (x * 30) + 100, 
+      y: (y * 30) + 100,
       id,
-      radius: 15,
-      bounce: -0.9,
+      radius: 10,
+      bounce: -0.2,
       friction: 0.9,
 
       dUp: shape[y - 1]?.[x + 1] ? { 
@@ -126,7 +130,7 @@ function init() {
     block.velocity.setLength(0)
     block.velocity.setAngle(degToRad(90))
 
-    block.acceleration = block.create(0, 2)  
+    block.acceleration = block.create(0, 0.5)  
     block.accelerate = function(acceleration) {
       this.velocity.addTo(acceleration)
     }
@@ -136,8 +140,6 @@ function init() {
     settings.blocks[y][x] = block
     addTouchAction(block)
     id++
-
-    console.log(settings.blocks)
   }
 
   const updateConnectors = block => {
@@ -176,12 +178,14 @@ function init() {
               const { x, y } = block[direction].end
               const endBlock = settings.blocks[y][x]
               block[direction].endBlock = endBlock
+              block[direction].length = distanceBetween({ a: block, b: endBlock }) * 1.2
               elements.machine.appendChild(block[direction].el)
             }
           })
         }
       })
     })
+    console.log(settings.blocks)
   }
 
 
@@ -189,22 +193,15 @@ function init() {
     const onGrab = () =>{
       mouse.up(document, 'add', onLetGo)
       mouse.move(document, 'add', onDrag)
-      block.acceleration = block.create(0, 0)  
-      // settings.blockIsLifted = true
-      settings.interval = setInterval(()=> {
-        ;['dUp', 'right', 'down', 'dDown'].forEach(direction => {
-          if (block[direction]) {
-            const { endBlock } = block[direction]
-            const d = block.subtract(endBlock)
-            const springForce = d.multiply(settings.k)
-            endBlock.velocity.addTo(springForce)
-      
-            endBlock.accelerate(endBlock.acceleration)
-            endBlock.velocity.multiplyBy(endBlock.friction)
-            endBlock.addTo(endBlock.velocity)
+      settings.blocks.forEach(row => {
+        row.forEach(b => {
+          if (b) {
+            b.acceleration = b.create(0, 0)  
           }
         })
-      }, 30)
+      })
+      block.acceleration = block.create(0, -0.1) 
+
     }
     const onDrag = e =>{
       const x = ePos(e, 'X')
@@ -215,10 +212,14 @@ function init() {
     }
     const onLetGo = () => {
       mouse.up(document, 'remove', onLetGo)
-      mouse.move(document,'remove', onDrag)
-      block.acceleration = block.create(0, 2)  
-      clearInterval(settings.interval)
-      // settings.blockIsLifted = false
+      mouse.move(document,'remove', onDrag)  
+      settings.blocks.forEach(row => {
+        row.forEach(b => {
+          if (b) {
+            b.acceleration = b.create(0, 0.5)  
+          }
+        })
+      })
     }
     mouse.down(block.el,'add', onGrab)
   }
@@ -261,16 +262,16 @@ function init() {
       row.forEach(b2 => {
         if (b2) {
           if (b.id === b2.id) return
-          const distanceBetweenCapsules = distanceBetween({ a: b, b: b2 })
-          if (distanceBetweenCapsules < (b.radius * 2)) {
-            b.velocity.multiplyBy(-0.6)
-            const overlap = distanceBetweenCapsules - (b.radius * 2)
+          const distanceBetweenBlocks = distanceBetween({ a: b, b: b2 })
+          if (distanceBetweenBlocks < (b.radius * 2)) {
+            b.velocity.multiplyBy(-0.95)
+            const overlap = distanceBetweenBlocks - (b.radius * 2)
             b.setXy(
               getNewPosBasedOnTarget({
                 start: b,
                 target: b2,
                 distance: (overlap / 2), 
-                fullDistance: distanceBetweenCapsules
+                fullDistance: distanceBetweenBlocks
               })
             )
           }
@@ -293,23 +294,25 @@ function init() {
       row.forEach(block => {
         if (block) {
           spaceOutBlocks(block)
-          animateBlock(block)
           hitCheckWalls(block)
-          updateConnectors(block)
-        //   if (settings.blockIsLifted) {
-        //     ;['dUp', 'right', 'down', 'dDown'].forEach(direction => {
-        //       if (block[direction]) {
-        //         const { endBlock } = block[direction]
-        //         const d = block.subtract(endBlock)
-        //         const springForce = d.multiply(settings.k)
-        //         endBlock.velocity.addTo(springForce)
           
-        //         endBlock.accelerate(endBlock.acceleration)
-        //         endBlock.velocity.multiplyBy(endBlock.friction)
-        //         endBlock.addTo(endBlock.velocity)
-        //       }
-        //     })
-        //   }
+          ;['dUp', 'right', 'down', 'dDown'].forEach(direction => {
+            if (block[direction]) {
+              const { endBlock } = block[direction]
+              const d = endBlock.subtract(block)
+              d.setLength(d.getLength() - block[direction].length)
+              const springForce = d.multiply(settings.k)
+              block.velocity.addTo(springForce)
+
+              const d2 = block.subtract(endBlock)
+              d2.setLength(d2.getLength() - block[direction].length)
+              const springForce2 = d2.multiply(settings.k)
+              endBlock.velocity.addTo(springForce2)
+              
+            }
+          })
+          updateConnectors(block)
+          animateBlock(block)
         }
       })
     })
