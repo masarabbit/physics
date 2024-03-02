@@ -34,7 +34,8 @@ function init() {
     toyColumn: 3,
     toyRow: 3,
     k: 0.08,
-    blocks: []
+    blocks: [],
+    interval: null,
   }
 
   const elements = {
@@ -93,7 +94,7 @@ function init() {
       y,
       id,
       radius: 15,
-      bounce: -0.5,
+      bounce: -0.9,
       friction: 0.9,
     }
     block.velocity = block.create(0, 0)
@@ -133,6 +134,18 @@ function init() {
     const onGrab = () =>{
       mouse.up(document, 'add', onLetGo)
       mouse.move(document, 'add', onDrag)
+      block.acceleration = block.create(0, 0)  
+      settings.interval = setInterval(()=> {
+        const otherBlockIndex = block.id === 0 ? 1 : 0
+        const otherBlock = settings.blocks[otherBlockIndex]
+        const d = block.subtract(otherBlock)
+        const springForce = d.multiply(settings.k)
+        otherBlock.velocity.addTo(springForce)
+  
+        otherBlock.accelerate(otherBlock.acceleration)
+        otherBlock.velocity.multiplyBy(otherBlock.friction)
+        otherBlock.addTo(otherBlock.velocity)
+      }, 30)
     }
     const onDrag = e =>{
       const x = ePos(e, 'X')
@@ -140,20 +153,12 @@ function init() {
       const { left, top } = elements.machine.getBoundingClientRect()
       block.x = x - left
       block.y = y - top
-
-      const otherBlockIndex = block.id === 0 ? 1 : 0
-      const otherBlock = settings.blocks[otherBlockIndex]
-      const d = block.subtract(otherBlock)
-      const springForce = d.multiply(settings.k)
-      otherBlock.velocity.addTo(springForce)
-
-      otherBlock.accelerate(otherBlock.acceleration)
-      otherBlock.velocity.multiplyBy(otherBlock.friction)
-      otherBlock.addTo(otherBlock.velocity)
     }
     const onLetGo = () => {
       mouse.up(document, 'remove', onLetGo)
       mouse.move(document,'remove', onDrag)
+      block.acceleration = block.create(0, 2)  
+      clearInterval(settings.interval)
     }
     mouse.down(block.el,'add', onGrab)
   }
@@ -225,6 +230,10 @@ function init() {
       animateBlock(block)
       hitCheckWalls(block)
     })
+
+    // const d = settings.blocks[0].subtract(settings.blocks[1])
+    // const springForce = d.multiply(settings.k)
+    // settings.blocks[1].velocity.addTo(springForce)
 
      // temporal code. updates connector = would need to update by saving connector inside each block?
     settings.blocks[0].line.x = settings.blocks[0].x
