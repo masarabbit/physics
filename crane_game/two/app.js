@@ -29,19 +29,14 @@ function init() {
   }
 
   const settings = {
+    // toyNo: 4,
     flapRotate: 0,
     toyColumn: 3,
     toyRow: 3,
     k: 0.08,
     blocks: [],
     interval: null,
-    blockIsLifted: false
   }
-
-  const blockShape = [
-    [1, 1],
-    [1, 1]
-  ]
 
   const elements = {
     wrapper: document.querySelector('.wrapper'),
@@ -91,36 +86,16 @@ function init() {
     },
   }
 
-  const connector = () => Object.assign(document.createElement('div'), { className: 'connector' })
-
-
-  const createBlock = ({ shape, x, y }) => {
+  const createBlock = ({ x, y }) => {
     const block = {
       ...vector,
-      el: Object.assign(document.createElement('div'), { className: `block ${['yellow', 'blue', 'green', 'purple'][id]}`}),
-      x: x * 30, 
-      y: y * 30,
+      el: Object.assign(document.createElement('div'), { className: 'block'}),
+      x, 
+      y,
       id,
       radius: 15,
       bounce: -0.9,
       friction: 0.9,
-
-      dUp: shape[y - 1]?.[x + 1] ? { 
-        el: connector(),
-        end: { x: x + 1, y: y - 1 },
-      } : null,
-      right: shape[y][x + 1] ? { 
-        el: connector(),
-        end: { x: x + 1, y } 
-      } : null,
-      down: shape?.[y + 1]?.[x] ? { 
-        el: connector(),
-        end: { x, y: y + 1 } 
-      } : null,
-      dDown: shape?.[y + 1]?.[x + 1] ? { 
-        el: connector(),
-        end: { x: x + 1, y: y + 1 } 
-      } : null,
     }
     block.velocity = block.create(0, 0)
     block.velocity.setLength(0)
@@ -131,57 +106,27 @@ function init() {
       this.velocity.addTo(acceleration)
     }
 
+
     setStyles(block)
     elements.machine.append(block.el)
-    settings.blocks[y][x] = block
+    settings.blocks.push(block)
     addTouchAction(block)
     id++
-
-    console.log(settings.blocks)
   }
 
-  const updateConnectors = block => {
-    ;['dUp', 'right', 'down', 'dDown'].forEach(direction => {
-      if (block[direction]) {
-        block[direction] = {
-          ...block[direction],
-          x: block.x,
-          y: block.y,
-          w: distanceBetween({ a: block, b: block[direction].endBlock }),
-          deg: radToDeg(angleTo({ a: block, b: block[direction].endBlock })) 
-        }
-        setStyles(block[direction]) 
-      }
-    })
-  }
+  const addConnector = (a, b) => {
+    const line = {
+      el: Object.assign(document.createElement('div'), { className: 'connector'}),
+      x: a.x,
+      y: a.y,
+      deg: radToDeg(angleTo({ a, b })),
+      w: distanceBetween({ a, b })
+    }
+    elements.machine.append(line.el)
+    setStyles(line)
 
-  const createBlocks = shape => {
-    settings.blocks = [...shape]
-    shape.forEach((row, y) => {
-      row.forEach((block, x) => {
-        if (block) {
-          createBlock({
-            x,
-            y,
-            shape,
-          })
-        }
-      })
-    })
-    settings.blocks.forEach(row => {
-      row.forEach(block => {
-        if (block) {
-          ;['dUp', 'right', 'down', 'dDown'].forEach(direction => {
-            if (block[direction]) {
-              const { x, y } = block[direction].end
-              const endBlock = settings.blocks[y][x]
-              block[direction].endBlock = endBlock
-              elements.machine.appendChild(block[direction].el)
-            }
-          })
-        }
-      })
-    })
+    //
+    settings.blocks[0].line = line
   }
 
 
@@ -190,20 +135,16 @@ function init() {
       mouse.up(document, 'add', onLetGo)
       mouse.move(document, 'add', onDrag)
       block.acceleration = block.create(0, 0)  
-      // settings.blockIsLifted = true
       settings.interval = setInterval(()=> {
-        ;['dUp', 'right', 'down', 'dDown'].forEach(direction => {
-          if (block[direction]) {
-            const { endBlock } = block[direction]
-            const d = block.subtract(endBlock)
-            const springForce = d.multiply(settings.k)
-            endBlock.velocity.addTo(springForce)
-      
-            endBlock.accelerate(endBlock.acceleration)
-            endBlock.velocity.multiplyBy(endBlock.friction)
-            endBlock.addTo(endBlock.velocity)
-          }
-        })
+        const otherBlockIndex = block.id === 0 ? 1 : 0
+        const otherBlock = settings.blocks[otherBlockIndex]
+        const d = block.subtract(otherBlock)
+        const springForce = d.multiply(settings.k)
+        otherBlock.velocity.addTo(springForce)
+  
+        otherBlock.accelerate(otherBlock.acceleration)
+        otherBlock.velocity.multiplyBy(otherBlock.friction)
+        otherBlock.addTo(otherBlock.velocity)
       }, 30)
     }
     const onDrag = e =>{
@@ -218,7 +159,6 @@ function init() {
       mouse.move(document,'remove', onDrag)
       block.acceleration = block.create(0, 2)  
       clearInterval(settings.interval)
-      // settings.blockIsLifted = false
     }
     mouse.down(block.el,'add', onGrab)
   }
@@ -257,25 +197,21 @@ function init() {
 
 
   const spaceOutBlocks = b => {
-    settings.blocks.forEach( row =>{
-      row.forEach(b2 => {
-        if (b2) {
-          if (b.id === b2.id) return
-          const distanceBetweenCapsules = distanceBetween({ a: b, b: b2 })
-          if (distanceBetweenCapsules < (b.radius * 2)) {
-            b.velocity.multiplyBy(-0.6)
-            const overlap = distanceBetweenCapsules - (b.radius * 2)
-            b.setXy(
-              getNewPosBasedOnTarget({
-                start: b,
-                target: b2,
-                distance: (overlap / 2), 
-                fullDistance: distanceBetweenCapsules
-              })
-            )
-          }
-        }
-      })
+    settings.blocks.forEach(b2 =>{
+      if (b.id === b2.id) return
+      const distanceBetweenCapsules = distanceBetween({ a: b, b: b2 })
+      if (distanceBetweenCapsules < (b.radius * 2)) {
+        b.velocity.multiplyBy(-0.6)
+        const overlap = distanceBetweenCapsules - (b.radius * 2)
+        b.setXy(
+          getNewPosBasedOnTarget({
+            start: b,
+            target: b2,
+            distance: (overlap / 2), 
+            fullDistance: distanceBetweenCapsules
+          })
+        )
+      }
     })
   }
 
@@ -289,38 +225,31 @@ function init() {
   const animateBlocks = () => {
 
 
-    settings.blocks.forEach(row => {
-      row.forEach(block => {
-        if (block) {
-          spaceOutBlocks(block)
-          animateBlock(block)
-          hitCheckWalls(block)
-          updateConnectors(block)
-        //   if (settings.blockIsLifted) {
-        //     ;['dUp', 'right', 'down', 'dDown'].forEach(direction => {
-        //       if (block[direction]) {
-        //         const { endBlock } = block[direction]
-        //         const d = block.subtract(endBlock)
-        //         const springForce = d.multiply(settings.k)
-        //         endBlock.velocity.addTo(springForce)
-          
-        //         endBlock.accelerate(endBlock.acceleration)
-        //         endBlock.velocity.multiplyBy(endBlock.friction)
-        //         endBlock.addTo(endBlock.velocity)
-        //       }
-        //     })
-        //   }
-        }
-      })
+    settings.blocks.forEach(block => {
+      spaceOutBlocks(block)
+      animateBlock(block)
+      hitCheckWalls(block)
     })
+
+    // const d = settings.blocks[0].subtract(settings.blocks[1])
+    // const springForce = d.multiply(settings.k)
+    // settings.blocks[1].velocity.addTo(springForce)
+
+     // temporal code. updates connector = would need to update by saving connector inside each block?
+    settings.blocks[0].line.x = settings.blocks[0].x
+    settings.blocks[0].line.y = settings.blocks[0].y
+    settings.blocks[0].line.deg = radToDeg(angleTo({ a: settings.blocks[0], b: settings.blocks[1] }))
+    settings.blocks[0].line.w = distanceBetween({ a: settings.blocks[0], b: settings.blocks[1] })
+    setStyles(settings.blocks[0].line)
   }
 
   setInterval(()=> {
     animateBlocks()
   }, 30)
 
-  createBlocks(blockShape)
-
+  createBlock({ x: 20, y: 20 })
+  createBlock({ x: 20, y: 50 })
+  addConnector(settings.blocks[0], settings.blocks[1])
 }
   
 window.addEventListener('DOMContentLoaded', init)

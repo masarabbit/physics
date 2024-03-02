@@ -160,23 +160,3 @@ a {
 a:hover {
   text-decoration: underline;
 }
-
-.red {
-  border-color: red;
-}
-
-.yellow:after {
-  background-color: yellow;
-}
-
-.blue:after {
-  background-color: blue;
-}
-
-.green:after {
-  background-color: green;
-}
-
-.purple:after {
-  background-color: purple;
-}
