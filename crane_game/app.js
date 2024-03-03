@@ -1,6 +1,20 @@
 
 function init() { 
 
+  const inputs = {
+    k: document.querySelector('.k'),
+    friction: document.querySelector('.friction')
+  }
+
+  inputs.k.addEventListener('change', e => {
+    settings.k = +e.target.value
+  })
+
+  inputs.friction.addEventListener('change', e => {
+    settings.friction = +e.target.value
+  })
+
+
   let id = 0
 
   const setStyles = ({ el, x, y, w, deg }) =>{
@@ -12,7 +26,7 @@ function init() {
   const degToRad = deg => deg / (180 / Math.PI)
   const radToDeg = rad => Math.round(rad * (180 / Math.PI))
   const angleTo = ({ a, b }) => Math.atan2(b.y - a.y, b.x - a.x)
-  const distanceBetween = ({ a, b }) => Math.round(Math.sqrt(Math.pow((a.x - b.x), 2) + Math.pow((a.y - b.y), 2)))
+  const distanceBetween = ({ a, b }) => Math.sqrt(Math.pow((a.x - b.x), 2) + Math.pow((a.y - b.y), 2))
 
 
   const ePos = (e, type) => Math.round(e.type[0] === 'm' ? e[`page${type}`] : e.touches[0][`page${type}`])
@@ -30,19 +44,32 @@ function init() {
 
   const settings = {
     flapRotate: 0,
-    toyColumn: 3,
-    toyRow: 3,
-    k: 0.2,
+    k: 0.4,
+    bounce: -0.2,
+    friction: 0.8,
     blocks: [],
     interval: null,
-    blockIsLifted: false
+    blockIsLifted: false,
+    grabInterval: null
   }
 
   const blockShape = [
-    [1, 1, 1],
-    [1, 1, 1],
-    [1, 1, 1],
+    [1, 1, 1, 1],
+    [1, 1, 1, 1],
+    [1, 1, 1, 1],
+    [1, 1, 1, 1],
   ]
+
+  // const blockShape = [
+  //   [1, 1],
+  //   [1, 1],
+  // ]
+
+
+  // const blockShape = [
+  //   [1, 1],
+  //   [1, 0],
+  // ]
 
   const elements = {
     wrapper: document.querySelector('.wrapper'),
@@ -73,9 +100,6 @@ function init() {
       this.x = Math.cos(angle) * length
       this.y = Math.sin(angle) * length
     },
-    getLength: function() {
-      return Math.sqrt(this.x * this.x + this.y * this.y);
-    },
     magnitude: function() {
       return Math.sqrt(this.x * this.x + this.y * this.y)
     },
@@ -105,32 +129,17 @@ function init() {
       x: (x * 30) + 100, 
       y: (y * 30) + 100,
       id,
-      radius: 10,
-      bounce: -0.2,
-      friction: 0.9,
-
-      dUp: shape[y - 1]?.[x + 1] ? { 
-        el: connector(),
-        end: { x: x + 1, y: y - 1 },
-      } : null,
-      right: shape[y][x + 1] ? { 
-        el: connector(),
-        end: { x: x + 1, y } 
-      } : null,
-      down: shape?.[y + 1]?.[x] ? { 
-        el: connector(),
-        end: { x, y: y + 1 } 
-      } : null,
-      dDown: shape?.[y + 1]?.[x + 1] ? { 
-        el: connector(),
-        end: { x: x + 1, y: y + 1 } 
-      } : null,
+      radius: 15,
+      dUp: shape[y - 1]?.[x + 1] ? { end: { x: x + 1, y: y - 1 } } : null,
+      right: shape[y][x + 1] ? { end: { x: x + 1, y } } : null,
+      down: shape?.[y + 1]?.[x] ? { end: { x, y: y + 1 } } : null,
+      dDown: shape?.[y + 1]?.[x + 1] ? { end: { x: x + 1, y: y + 1 } } : null,
     }
     block.velocity = block.create(0, 0)
     block.velocity.setLength(0)
     block.velocity.setAngle(degToRad(90))
 
-    block.acceleration = block.create(0, 0.5)  
+    block.acceleration = block.create(0, 1)  
     block.accelerate = function(acceleration) {
       this.velocity.addTo(acceleration)
     }
@@ -161,13 +170,7 @@ function init() {
     settings.blocks = [...shape]
     shape.forEach((row, y) => {
       row.forEach((block, x) => {
-        if (block) {
-          createBlock({
-            x,
-            y,
-            shape,
-          })
-        }
+        if (block)  createBlock({ x, y, shape })
       })
     })
     settings.blocks.forEach(row => {
@@ -178,7 +181,9 @@ function init() {
               const { x, y } = block[direction].end
               const endBlock = settings.blocks[y][x]
               block[direction].endBlock = endBlock
-              block[direction].length = distanceBetween({ a: block, b: endBlock }) * 1.2
+              block[direction].length = distanceBetween({ a: block, b: endBlock }) * 1.1
+              // block[direction].length = 30
+              block[direction].el = connector()
               elements.machine.appendChild(block[direction].el)
             }
           })
@@ -190,25 +195,22 @@ function init() {
 
 
   const addTouchAction = block =>{
-    const onGrab = () =>{
+    const mousePos = { x: 0, y: 0 }
+    const onGrab = e =>{
       mouse.up(document, 'add', onLetGo)
       mouse.move(document, 'add', onDrag)
-      settings.blocks.forEach(row => {
-        row.forEach(b => {
-          if (b) {
-            b.acceleration = b.create(0, 0)  
-          }
-        })
-      })
-      block.acceleration = block.create(0, -0.1) 
-
+      mousePos.x = ePos(e, 'X')
+      mousePos.y = ePos(e, 'Y')
+      clearInterval(settings.grabInterval)
+      settings.grabInterval = setInterval(()=> {
+        const { left, top } = elements.machine.getBoundingClientRect()
+        block.acceleration = block.create((mousePos.x - block.x) - left,  (mousePos.y - block.y) - top) 
+      }, 30)
+      settings.bounce = 0.2
     }
     const onDrag = e =>{
-      const x = ePos(e, 'X')
-      const y = ePos(e, 'Y')
-      const { left, top } = elements.machine.getBoundingClientRect()
-      block.x = x - left
-      block.y = y - top
+      mousePos.x = ePos(e, 'X')
+      mousePos.y = ePos(e, 'Y')
     }
     const onLetGo = () => {
       mouse.up(document, 'remove', onLetGo)
@@ -216,11 +218,13 @@ function init() {
       settings.blocks.forEach(row => {
         row.forEach(b => {
           if (b) {
-            b.acceleration = b.create(0, 0.5)  
+            b.acceleration = b.create(0, 1)  
           }
         })
       })
+      clearInterval(settings.grabInterval)
     }
+    settings.bounce = -0.2
     mouse.down(block.el,'add', onGrab)
   }
 
@@ -237,34 +241,40 @@ function init() {
   const { width: machineWidth, height: machineHeight } = elements.machine.getBoundingClientRect()
 
   const hitCheckWalls = b => {
-    const buffer = 5
+    const buffer = 0
     if (b.x + b.radius + buffer > machineWidth) {
       b.x = machineWidth - (b.radius + buffer)
-      b.velocity.x = b.velocity.x * b.bounce
+      b.velocity.x = b.velocity.x * settings.bounce
+      // b.acceleration.x = 0
     }
     if (b.x - (b.radius + buffer) < 0) {
       b.x = b.radius
-      b.velocity.x = b.velocity.x * b.bounce
+      b.velocity.x = b.velocity.x * settings.bounce
+      // b.acceleration.x = 0
     }
     if (b.y + b.radius + buffer > machineHeight) {
       b.y = machineHeight - b.radius - buffer
-      b.velocity.y = b.velocity.y * b.bounce
+      b.velocity.y = b.velocity.y * settings.bounce
+      // b.acceleration.y = b.acceleration.y * 0.2
     }
     if (b.y - b.radius < 0) {
       b.y = b.radius
-      b.velocity.y = b.velocity.y * b.bounce
+      b.velocity.y = b.velocity.y * settings.bounce
+      // b.acceleration.y = b.acceleration.y * 0.2
     }
   }
 
 
   const spaceOutBlocks = b => {
-    settings.blocks.forEach( row =>{
+    settings.blocks.forEach(row =>{
       row.forEach(b2 => {
         if (b2) {
           if (b.id === b2.id) return
           const distanceBetweenBlocks = distanceBetween({ a: b, b: b2 })
           if (distanceBetweenBlocks < (b.radius * 2)) {
-            b.velocity.multiplyBy(-0.95)
+            b.velocity.multiply(-0.6)
+            // todo this needs to be corrected so that the shape get's fixed in the right way
+            // todo currently it sets the distance as though blocks are next to each other
             const overlap = distanceBetweenBlocks - (b.radius * 2)
             b.setXy(
               getNewPosBasedOnTarget({
@@ -282,35 +292,34 @@ function init() {
 
   const animateBlock = block => {
     block.accelerate(block.acceleration)
-    block.velocity.multiplyBy(block.friction)
+    block.velocity.multiplyBy(settings.friction)
     block.addTo(block.velocity)
     setStyles(block)
   }
 
   const animateBlocks = () => {
-
-
     settings.blocks.forEach(row => {
-      row.forEach(block => {
+      row.forEach((block, i) => {
         if (block) {
-          spaceOutBlocks(block)
-          hitCheckWalls(block)
-          
           ;['dUp', 'right', 'down', 'dDown'].forEach(direction => {
             if (block[direction]) {
               const { endBlock } = block[direction]
               const d = endBlock.subtract(block)
-              d.setLength(d.getLength() - block[direction].length)
+              d.setLength(d.magnitude() - block[direction].length)
               const springForce = d.multiply(settings.k)
+              // if  (i === 0) console.log('springForce', springForce)
+              // console.log(Math.abs(springForce.x))
+              // if (springForce.x > 15) springForce.x = 15
+              // if (springForce.x < -15) springForce.x = -15
+              // if (springForce.y > 15) springForce.y = 15
+              // if (springForce.y < -15) springForce.y = -15
               block.velocity.addTo(springForce)
 
-              const d2 = block.subtract(endBlock)
-              d2.setLength(d2.getLength() - block[direction].length)
-              const springForce2 = d2.multiply(settings.k)
-              endBlock.velocity.addTo(springForce2)
-              
+              endBlock.velocity.addTo(springForce.multiply(-1))
             }
           })
+          spaceOutBlocks(block)
+          hitCheckWalls(block)
           updateConnectors(block)
           animateBlock(block)
         }
@@ -318,9 +327,7 @@ function init() {
     })
   }
 
-  setInterval(()=> {
-    animateBlocks()
-  }, 30)
+  setInterval(animateBlocks, 30)
 
   createBlocks(blockShape)
 
