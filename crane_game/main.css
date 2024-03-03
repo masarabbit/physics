@@ -41,7 +41,7 @@ p, h1, h2, h3, h4 {
 .machine {
   position: relative;
   width: 700px;
-  height: 600px; 
+  height: 500px; 
   --m: 4;
   --w: 80px;
   --h: 125px;
@@ -75,7 +75,7 @@ p, h1, h2, h3, h4 {
   height: var(--size);
   border: 1px solid blue;
   content: '';
-  border-radius: 50%;
+  /* border-radius: 50%; */
 }
 
 

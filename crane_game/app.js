@@ -15,8 +15,6 @@ function init() {
   })
 
 
-  let id = 0
-
   const setStyles = ({ el, x, y, w, deg }) =>{
     if (w) el.style.width =px(w)
     el.style.transform = `translate(${x ? px(x) : 0}, ${y ? px(y) : 0}) rotate(${deg || 0}deg)`
@@ -47,7 +45,7 @@ function init() {
     k: 0.4,
     bounce: -0.2,
     friction: 0.8,
-    blocks: [],
+    shapes: [],
     interval: null,
     blockIsLifted: false,
     grabInterval: null
@@ -60,6 +58,11 @@ function init() {
     [1, 1, 1, 1],
   ]
 
+
+  // const blockShape = [
+  //   [1, 1, 1, 1, 1, 1, 1, 1]
+  // ]
+
   // const blockShape = [
   //   [1, 1],
   //   [1, 1],
@@ -69,6 +72,17 @@ function init() {
   // const blockShape = [
   //   [1, 1],
   //   [1, 0],
+  // ]
+
+  // const blockShape = [
+  //   [1, 1, 1, 1, 1, 1, 1],
+  //   [1, 1, 1, 1, 1, 1, 1],
+  //   [1, 1, 1, 1, 1, 1, 1],
+  //   [1, 1, 1, 1, 1, 1, 1],
+  //   [1, 1, 1, 1, 1, 1, 1],
+  //   [1, 1, 1, 1, 1, 1, 1],
+  //   [1, 1, 1, 1, 1, 1, 1],
+  //   [1, 1, 1, 1, 1, 1, 1],
   // ]
 
   const elements = {
@@ -122,18 +136,15 @@ function init() {
   const connector = () => Object.assign(document.createElement('div'), { className: 'connector' })
 
 
-  const createBlock = ({ shape, x, y }) => {
+  const createBlock = ({ shape, x, y, data }) => {
+    const row = shape[0].length
     const block = {
       ...vector,
-      el: Object.assign(document.createElement('div'), { className: `block ${['yellow', 'blue', 'green', 'purple']?.[id]}`}),
+      el: Object.assign(document.createElement('div'), { className: `block ${['yellow', 'blue', 'green', 'purple']?.[row * y + x]}`}),
       x: (x * 30) + 100, 
       y: (y * 30) + 100,
-      id,
+      id: row * y + x,
       radius: 15,
-      dUp: shape[y - 1]?.[x + 1] ? { end: { x: x + 1, y: y - 1 } } : null,
-      right: shape[y][x + 1] ? { end: { x: x + 1, y } } : null,
-      down: shape?.[y + 1]?.[x] ? { end: { x, y: y + 1 } } : null,
-      dDown: shape?.[y + 1]?.[x + 1] ? { end: { x: x + 1, y: y + 1 } } : null,
     }
     block.velocity = block.create(0, 0)
     block.velocity.setLength(0)
@@ -143,54 +154,82 @@ function init() {
     block.accelerate = function(acceleration) {
       this.velocity.addTo(acceleration)
     }
+    if (shape[y - 1]?.[x + 1]) data.lines.push({ start: block, end: row * (y - 1) + x + 1 })
+    if (shape[y][x + 1]) data.lines.push({ start: block, end: row * y + x + 1 })
+    if (shape?.[y + 1]?.[x]) data.lines.push({ start: block, end: row * (y + 1) + x })
+    if (shape?.[y + 1]?.[x + 1]) data.lines.push({ start: block, end: row * (y + 1) + x + 1 })
 
     setStyles(block)
     elements.machine.append(block.el)
-    settings.blocks[y][x] = block
+    data.blocks.push(block)
     addTouchAction(block)
-    id++
   }
 
-  const updateConnectors = block => {
-    ;['dUp', 'right', 'down', 'dDown'].forEach(direction => {
-      if (block[direction]) {
-        block[direction] = {
-          ...block[direction],
-          x: block.x,
-          y: block.y,
-          w: distanceBetween({ a: block, b: block[direction].endBlock }),
-          deg: radToDeg(angleTo({ a: block, b: block[direction].endBlock })) 
-        }
-        setStyles(block[direction]) 
-      }
-    })
+  const updateConnectors = line => {
+    line.x = line.start.x
+    line.y = line.start.y
+    line.w = distanceBetween({ a: line.start, b: line.endBlock })
+    line.deg = radToDeg(angleTo({ a: line.start, b: line.endBlock })) 
+    setStyles(line) 
   }
+
+  // const getMidPoint = ({ a, b }) => {
+  //   return {
+  //     x: (a.x + b.x) / 2,
+  //     y: (a.y + b.y) / 2
+  //   }
+  // }
 
   const createBlocks = shape => {
-    settings.blocks = [...shape]
+    const newShape = {
+      blocks: [],
+      lines: []
+    }
+    settings.shapes.push(newShape)
     shape.forEach((row, y) => {
       row.forEach((block, x) => {
-        if (block)  createBlock({ x, y, shape })
+        if (block) createBlock({ x, y, shape, data: newShape })
       })
     })
-    settings.blocks.forEach(row => {
-      row.forEach(block => {
-        if (block) {
-          ;['dUp', 'right', 'down', 'dDown'].forEach(direction => {
-            if (block[direction]) {
-              const { x, y } = block[direction].end
-              const endBlock = settings.blocks[y][x]
-              block[direction].endBlock = endBlock
-              block[direction].length = distanceBetween({ a: block, b: endBlock }) * 1.1
-              // block[direction].length = 30
-              block[direction].el = connector()
-              elements.machine.appendChild(block[direction].el)
-            }
-          })
+    // const midPoint = {
+    //   ...vector,
+    //   ...getMidPoint({ a: newShape.blocks[0], b: newShape.blocks[15] }),
+    //   id: 'x',
+    //   radius: 15
+    // }
+    // midPoint.velocity = midPoint.create(0, 0)
+    // midPoint.velocity.setLength(0)
+    // midPoint.velocity.setAngle(degToRad(90))
+
+    // midPoint.acceleration = midPoint.create(0, 1)  
+    // midPoint.accelerate = function(acceleration) {
+    //   this.velocity.addTo(acceleration)
+    // }
+    // newShape.blocks.forEach(block => {
+    //   newShape.lines.push({ start: block, endBlock: midPoint })
+    // })
+    // newShape.blocks.push(midPoint)
+    newShape.lines.push({ start: newShape.blocks[0], end: 15 })
+    newShape.lines.push({ start: newShape.blocks[3], end: 12 })
+
+    newShape.lines.push({ start: newShape.blocks[0], end: 3 })
+    newShape.lines.push({ start: newShape.blocks[3], end: 15 })
+    newShape.lines.push({ start: newShape.blocks[0], end: 12 })
+    newShape.lines.push({ start: newShape.blocks[12], end: 15 })
+
+
+    settings.shapes.forEach(shape => {
+      shape.lines.forEach(line => {
+        if (!line.endBlock) {
+          const endBlock = shape.blocks[line.end]
+          line.endBlock = endBlock
         }
+        line.length = distanceBetween({ a: line.start, b: line.endBlock }) * 1.1
+        line.el = connector()
+        elements.machine.appendChild(line.el)
       })
     })
-    console.log(settings.blocks)
+    console.log(shape)
   }
 
 
@@ -215,11 +254,9 @@ function init() {
     const onLetGo = () => {
       mouse.up(document, 'remove', onLetGo)
       mouse.move(document,'remove', onDrag)  
-      settings.blocks.forEach(row => {
-        row.forEach(b => {
-          if (b) {
-            b.acceleration = b.create(0, 1)  
-          }
+      settings.shapes.forEach(shape => {
+        shape.blocks.forEach(b => {
+          if (b) b.acceleration = b.create(0, 1)  
         })
       })
       clearInterval(settings.grabInterval)
@@ -245,34 +282,32 @@ function init() {
     if (b.x + b.radius + buffer > machineWidth) {
       b.x = machineWidth - (b.radius + buffer)
       b.velocity.x = b.velocity.x * settings.bounce
-      // b.acceleration.x = 0
     }
     if (b.x - (b.radius + buffer) < 0) {
       b.x = b.radius
       b.velocity.x = b.velocity.x * settings.bounce
-      // b.acceleration.x = 0
     }
     if (b.y + b.radius + buffer > machineHeight) {
       b.y = machineHeight - b.radius - buffer
       b.velocity.y = b.velocity.y * settings.bounce
-      // b.acceleration.y = b.acceleration.y * 0.2
     }
     if (b.y - b.radius < 0) {
       b.y = b.radius
       b.velocity.y = b.velocity.y * settings.bounce
-      // b.acceleration.y = b.acceleration.y * 0.2
     }
   }
 
 
   const spaceOutBlocks = b => {
-    settings.blocks.forEach(row =>{
-      row.forEach(b2 => {
+
+    settings.shapes.forEach(shape =>{
+      // const midPoint = getMidPoint({ a: shape.blocks[0], b: shape.blocks[15] })
+      shape.blocks.forEach(b2 => {
         if (b2) {
           if (b.id === b2.id) return
           const distanceBetweenBlocks = distanceBetween({ a: b, b: b2 })
           if (distanceBetweenBlocks < (b.radius * 2)) {
-            b.velocity.multiply(-0.6)
+            // b.velocity.multiply(-0.6)
             // todo this needs to be corrected so that the shape get's fixed in the right way
             // todo currently it sets the distance as though blocks are next to each other
             const overlap = distanceBetweenBlocks - (b.radius * 2)
@@ -298,31 +333,24 @@ function init() {
   }
 
   const animateBlocks = () => {
-    settings.blocks.forEach(row => {
-      row.forEach((block, i) => {
+    settings.shapes.forEach(shape => {
+      const angle = radToDeg(angleTo({ a: shape.blocks[0], b: shape.blocks[15] }))
+      shape.blocks.forEach(block => {
         if (block) {
-          ;['dUp', 'right', 'down', 'dDown'].forEach(direction => {
-            if (block[direction]) {
-              const { endBlock } = block[direction]
-              const d = endBlock.subtract(block)
-              d.setLength(d.magnitude() - block[direction].length)
-              const springForce = d.multiply(settings.k)
-              // if  (i === 0) console.log('springForce', springForce)
-              // console.log(Math.abs(springForce.x))
-              // if (springForce.x > 15) springForce.x = 15
-              // if (springForce.x < -15) springForce.x = -15
-              // if (springForce.y > 15) springForce.y = 15
-              // if (springForce.y < -15) springForce.y = -15
-              block.velocity.addTo(springForce)
-
-              endBlock.velocity.addTo(springForce.multiply(-1))
-            }
-          })
+          block.deg = angle - 45
           spaceOutBlocks(block)
           hitCheckWalls(block)
-          updateConnectors(block)
           animateBlock(block)
         }
+      })
+      shape.lines.forEach(line => {
+        const d = line.endBlock.subtract(line.start)
+        d.setLength(d.magnitude() - line.length)
+        const springForce = d.multiply(settings.k)
+        line.start.velocity.addTo(springForce)
+
+        line.endBlock.velocity.addTo(springForce.multiply(-1))
+        updateConnectors(line)
       })
     })
   }
