@@ -169,12 +169,12 @@ p, h1, h2, h3, h4 {
 }
 
 .block.ear-left::before {
-  top: -20px;
+  top: -16px;
   left: -20px;
 }
 
 .block.ear-right::before {
-  top: -20px;
+  top: -16px;
   right: -20px;
 }
 
