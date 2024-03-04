@@ -1,6 +1,8 @@
 
 function init() { 
 
+  // TODO check how pressure softbody works and see if it could be added
+
   const inputs = {
     k: document.querySelector('.k'),
     friction: document.querySelector('.friction')
@@ -116,7 +118,6 @@ function init() {
       el: Object.assign(document.createElement('div'), { className: `block ${['yellow', 'blue', 'green', 'purple']?.[row * y + x]}`}),
       x: (x * 30) + 100, 
       y: (y * 30) + 100,
-      shapeId: data.id,
       id: row * y + x,
       radius: 15,
     }
@@ -152,8 +153,7 @@ function init() {
   const createBlocks = shape => {
     const newShape = {
       blocks: [],
-      lines: [],
-      id: settings.shapes.length
+      lines: []
     }
     settings.shapes.push(newShape)
     shape.forEach((row, y) => {
@@ -213,14 +213,16 @@ function init() {
       newShape.blocks[item.index].el.classList.add(item.className)
     })
 
-    newShape.lines.forEach(line => {
-      if (!line.endBlock) {
-        const endBlock = newShape.blocks[line.end]
-        line.endBlock = endBlock
-      }
-      line.length = distanceBetween({ a: line.start, b: line.endBlock }) * 1.1
-      line.el = connector()
-      elements.machine.appendChild(line.el)
+    settings.shapes.forEach(shape => {
+      shape.lines.forEach(line => {
+        if (!line.endBlock) {
+          const endBlock = shape.blocks[line.end]
+          line.endBlock = endBlock
+        }
+        line.length = distanceBetween({ a: line.start, b: line.endBlock }) * 1.1
+        line.el = connector()
+        elements.machine.appendChild(line.el)
+      })
     })
     console.log(shape)
   }
@@ -233,11 +235,6 @@ function init() {
       mouse.move(document, 'add', onDrag)
       mousePos.x = ePos(e, 'X')
       mousePos.y = ePos(e, 'Y')
-      settings.shapes.forEach(shape => {
-        shape.blocks.forEach(b => {
-          if (b) b.acceleration = b.create(0, 1)  
-        })
-      })
       clearInterval(settings.grabInterval)
       settings.grabInterval = setInterval(()=> {
         const { left, top } = elements.machine.getBoundingClientRect()
@@ -252,8 +249,10 @@ function init() {
     const onLetGo = () => {
       mouse.up(document, 'remove', onLetGo)
       mouse.move(document,'remove', onDrag)  
-      settings.shapes[block.shapeId].blocks.forEach(b => {
-        if (b) b.acceleration = b.create(0, 1)  
+      settings.shapes.forEach(shape => {
+        shape.blocks.forEach(b => {
+          if (b) b.acceleration = b.create(0, 1)  
+        })
       })
       clearInterval(settings.grabInterval)
     }
@@ -297,6 +296,7 @@ function init() {
 
 
   const spaceOutBlocks = b => {
+
     settings.shapes.forEach(shape =>{
       // const midPoint = getMidPoint({ a: shape.blocks[0], b: shape.blocks[15] })
       shape.blocks.forEach(b2 => {
@@ -304,7 +304,7 @@ function init() {
           if (b.id === b2.id) return
           const distanceBetweenBlocks = distanceBetween({ a: b, b: b2 })
           if (distanceBetweenBlocks < (b.radius * 2)) {
-            // b.velocity.multiplyBy(-0.6)
+            // b.velocity.multiply(-0.6)
             // todo this needs to be corrected so that the shape get's fixed in the right way
             // todo currently it sets the distance as though blocks are next to each other
             const overlap = distanceBetweenBlocks - (b.radius * 2)
@@ -319,30 +319,6 @@ function init() {
           }
         }
       })
-    })
-  }
-
-  const spaceOutShapes = shape => {
-    settings.shapes.forEach(s =>{
-      if (shape.id === s.id) return
-      const distanceBetweenShapes = distanceBetween({ a: shape.blocks[4], b: s.blocks[4] })
-      if (distanceBetweenShapes < 45) {
-        shape.blocks.forEach(block => {
-          block.velocity.multiplyBy(-0.2)
-          block.acceleration = block.create(0, 0)
-        })
-        // todo this needs to be corrected so that the shape get's fixed in the right way
-        // todo currently it sets the distance as though blocks are next to each other
-        const overlap = distanceBetweenShapes - 90
-        shape.blocks[4].setXy(
-          getNewPosBasedOnTarget({
-            start: shape.blocks[4],
-            target: s.blocks[4],
-            distance: (overlap / 2), 
-            fullDistance: distanceBetweenShapes
-          })
-        )
-      }
     })
   }
 
@@ -364,7 +340,6 @@ function init() {
           animateBlock(block)
         }
       })
-      spaceOutShapes(shape)
       shape.lines.forEach(line => {
         const d = line.endBlock.subtract(line.start)
         d.setLength(d.magnitude() - line.length)
@@ -380,17 +355,11 @@ function init() {
   setInterval(animateBlocks, 30)
 
   createBlocks(blockShape)
-  setTimeout(()=> {
-    createBlocks(blockShape)
-  }, 1000)
-
-  setTimeout(()=> {
-    createBlocks(blockShape)
-  }, 2000)
+  // createBlocks(blockShape)
+  // createBlocks(blockShape)
 
 }
   
 window.addEventListener('DOMContentLoaded', init)
-
 
 
