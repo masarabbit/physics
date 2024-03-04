@@ -54,11 +54,39 @@ function init() {
   }
 
   const blockShape = [
-    [1, 1, 1],
-    [1, 1, 1],
-    [1, 1, 1],
-    [1, 1, 1],
+    [1, 1, 1, 1],
+    [1, 1, 1, 1],
+    [1, 1, 1, 1],
+    [1, 1, 1, 1],
   ]
+
+
+  // const blockShape = [
+  //   [1, 1, 1, 1, 1, 1, 1, 1]
+  // ]
+
+  // const blockShape = [
+  //   [1, 1, 1],
+  //   [1, 1, 1],
+  //   [1, 1, 1],
+  // ]
+
+
+  // const blockShape = [
+  //   [1, 1],
+  //   [1, 0],
+  // ]
+
+  // const blockShape = [
+  //   [1, 1, 1, 1, 1, 1, 1],
+  //   [1, 1, 1, 1, 1, 1, 1],
+  //   [1, 1, 1, 1, 1, 1, 1],
+  //   [1, 1, 1, 1, 1, 1, 1],
+  //   [1, 1, 1, 1, 1, 1, 1],
+  //   [1, 1, 1, 1, 1, 1, 1],
+  //   [1, 1, 1, 1, 1, 1, 1],
+  //   [1, 1, 1, 1, 1, 1, 1],
+  // ]
 
   const elements = {
     wrapper: document.querySelector('.wrapper'),
@@ -148,7 +176,12 @@ function init() {
     setStyles(line) 
   }
 
-
+  // const getMidPoint = ({ a, b }) => {
+  //   return {
+  //     x: (a.x + b.x) / 2,
+  //     y: (a.y + b.y) / 2
+  //   }
+  // }
 
   const createBlocks = shape => {
     const newShape = {
@@ -161,57 +194,32 @@ function init() {
         if (block) createBlock({ x, y, shape, data: newShape })
       })
     })
-    const topRight = shape[0].length - 1
-    const bottomRight = newShape.blocks.length - 1
-    const bottomLeft = bottomRight - topRight
-    newShape.lines.push({ start: newShape.blocks[0], end: bottomRight })
-    newShape.lines.push({ start: newShape.blocks[topRight], end: bottomLeft })
+    // const midPoint = {
+    //   ...vector,
+    //   ...getMidPoint({ a: newShape.blocks[0], b: newShape.blocks[15] }),
+    //   id: 'x',
+    //   radius: 15
+    // }
+    // midPoint.velocity = midPoint.create(0, 0)
+    // midPoint.velocity.setLength(0)
+    // midPoint.velocity.setAngle(degToRad(90))
 
-    newShape.lines.push({ start: newShape.blocks[0], end: topRight })
-    newShape.lines.push({ start: newShape.blocks[topRight], end: bottomRight })
-    newShape.lines.push({ start: newShape.blocks[0], end: bottomLeft })
-    newShape.lines.push({ start: newShape.blocks[bottomLeft], end: bottomRight })
+    // midPoint.acceleration = midPoint.create(0, 1)  
+    // midPoint.accelerate = function(acceleration) {
+    //   this.velocity.addTo(acceleration)
+    // }
+    // newShape.blocks.forEach(block => {
+    //   newShape.lines.push({ start: block, endBlock: midPoint })
+    // })
+    // newShape.blocks.push(midPoint)
+    newShape.lines.push({ start: newShape.blocks[0], end: 15 })
+    newShape.lines.push({ start: newShape.blocks[3], end: 12 })
 
-    ;[
-      {
-        index: 0,
-        className: 'ear-left'
-      },
-      {
-        index: 2,
-        className: 'ear-right'
-      },
-      {
-        index: 6,
-        className: 'arm-left'
-      },
-      {
-        index: 8,
-        className: 'arm-right'
-      },
-      {
-        index: 9,
-        className: 'leg-left'
-      },
-      {
-        index: 11,
-        className: 'leg-right'
-      },
-      {
-        index: 1,
-        className: 'head'
-      },
-      {
-        index: 4,
-        className: 'mouth'
-      },
-      {
-        index: 7,
-        className: 'body'
-      },
-    ].forEach(item => {
-      newShape.blocks[item.index].el.classList.add(item.className)
-    })
+    newShape.lines.push({ start: newShape.blocks[0], end: 3 })
+    newShape.lines.push({ start: newShape.blocks[3], end: 15 })
+    newShape.lines.push({ start: newShape.blocks[0], end: 12 })
+    newShape.lines.push({ start: newShape.blocks[12], end: 15 })
+
 
     settings.shapes.forEach(shape => {
       shape.lines.forEach(line => {
@@ -285,12 +293,10 @@ function init() {
     if (b.y + b.radius + buffer > machineHeight) {
       b.y = machineHeight - b.radius - buffer
       b.velocity.y = b.velocity.y * settings.bounce
-      // settings.friction = 0.5
     }
     if (b.y - b.radius < 0) {
       b.y = b.radius
       b.velocity.y = b.velocity.y * settings.bounce
-      // settings.friction = 0.5
     }
   }
 
@@ -331,7 +337,7 @@ function init() {
 
   const animateBlocks = () => {
     settings.shapes.forEach(shape => {
-      const angle = radToDeg(angleTo({ a: shape.blocks[0], b: shape.blocks[4] }))
+      const angle = radToDeg(angleTo({ a: shape.blocks[0], b: shape.blocks[shape.blocks.length - 1] }))
       shape.blocks.forEach(block => {
         if (block) {
           block.deg = angle - 45
@@ -355,8 +361,6 @@ function init() {
   setInterval(animateBlocks, 30)
 
   createBlocks(blockShape)
-  // createBlocks(blockShape)
-  // createBlocks(blockShape)
 
 }
   

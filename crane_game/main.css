@@ -31,7 +31,7 @@ p, h1, h2, h3, h4 {
   padding-top: 130px;
 }
 
-.pix {
+.block::before {
   background-size: calc(var(--w) * var(--m)) calc(var(--h) * var(--m)) !important; 
   background-repeat: no-repeat !important;
   image-rendering: pixelated;
@@ -61,6 +61,7 @@ p, h1, h2, h3, h4 {
 
 .block {
   position: absolute;
+  --m: 2;
   /* border: 1px solid blue;
   width: 0px;
   height: 0px; */
@@ -69,13 +70,132 @@ p, h1, h2, h3, h4 {
 .block::after {
   --size: 30px;
   position: absolute;
-  top: calc(-0.5 * var(--size));
   left: calc(-0.5 * var(--size));
+  top: calc(-0.5 * var(--size));
   width: var(--size);
   height: var(--size);
-  border: 1px solid blue;
+  /* border: 1px solid rgba(0, 0, 255, 0.301); */
   content: '';
+  z-index: 9;
   /* border-radius: 50%; */
+}
+
+/*#974011*/
+.block.head::before {
+  position: absolute;
+  content: '';
+  width: 90px;
+  height: 56px;
+  left: -45px;
+  top: -5px;
+  /* border: 1px solid rgb(255, 230, 0); */
+  z-index: 10;
+  pointer-events: none;
+  background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAC0AAAAcCAYAAAD1PDaSAAAAAXNSR0IArs4c6QAAAMJJREFUWEftmNsNgCAMAGUEnUi30Yl0G51IR9BAUlOQGCC8Supno+U4CoaKzvKsY3/b4iViy3EJc1wtALDzfpbgs465TYOKY/gXWgLXBGvOQMIDuIKuHRgmAOA0oalYxrYFQ2c4c2Rdt2sazkopMsWx6JPfyTROCKsfE9w3P0OH7kE2jc35bJQQ4z75nWo6BCLlNwyd0q5Zqu3+EXNZdBmHa9rFUox36JrmO2KM9f/JoV1sKdj+tBBgcuSaNXhVam+LPWUuvFvy6AkVAAAAAElFTkSuQmCC);
+  --w: 45px;
+  --h: 28px;
+}
+
+.block.mouth::before {
+  position: absolute;
+  content: '';
+  width: 38px;
+  height: 26px;
+  left: -19px;
+  top: -8px;
+  /* border: 1px solid rgb(255, 230, 0); */
+  pointer-events: none;
+  background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABMAAAANCAYAAABLjFUnAAAAAXNSR0IArs4c6QAAAGhJREFUOE9jZICC6Q6C/2FsUunMA+8ZQXrABMigjP3vSDUDrn6GoxADyEBGfAaBFKEDXJaC1NLPMJCrkF2HLygIuoyUQMRpGEiCkCvQ5fG6DFvgw1yKzSL6eJOUsIKppb7LqJoDqJk3AS0sVC1piT+sAAAAAElFTkSuQmCC);
+  --w: 19px;
+  --h: 13px;
+}
+
+.block.body::before {
+  position: absolute;
+  content: '';
+  width: 60px;
+  height: 40px;
+  left: -30px;
+  top: -15px;
+  /* border: 1px solid rgb(72, 255, 0); */
+  --w: 30px;
+  --h: 20px;
+  background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAUCAYAAACaq43EAAAAAXNSR0IArs4c6QAAAI1JREFUSEtjZEAD0x0E/6OLUYOfeeA9I7I5cA7Mwoz976hhD4YZMxyFwGIwB4AtBllKKwvRXQByAMjygbOYnr6F+R7ka8ZRi2mSpNEMHXpBDXIxcvZD5xMKNYp8DLOMVEtBjqLIYpgB5BQ8FFk8ID4e0DgmlIDwyVMU1BRbPPJqJ1iQDUhDADm+6NX0AQCkJYfpyGYSbwAAAABJRU5ErkJggg==);
+  pointer-events: none;
+}
+
+.block.head {
+  z-index: 10;
+}
+
+.block.mouth {
+  z-index: 10;
+}
+
+.block.body {
+  z-index: 9;
+}
+
+.block.ear-left,
+.block.ear-right {
+  z-index: 9;
+}
+
+.block.arm-left,
+.block.arm-right,
+.block.leg-left {
+  z-index: 7;
+}
+
+.block.leg-left,
+.block.leg-right {
+  z-index: 7;
+}
+
+.block.ear-left::before,
+.block.ear-right::before,
+.block.arm-left::before,
+.block.arm-right::before,
+.block.leg-left::before,
+.block.leg-right::before {
+  position: absolute;
+  content: '';
+  /* border: 1px solid rgb(255, 230, 0); */
+  width: 30px;
+  height: 30px;
+  --w: 15px;
+  --h: 15px;
+  background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA8AAAAPCAYAAAA71pVKAAAAAXNSR0IArs4c6QAAAFxJREFUOE9jZICC6Q6C/2FsQnTmgfeMIDVgAqQxY/87Qnrg8jMchRhABjAia/z39w8DEzMLUYaADIBrJkUjyHQUzURZh6RoVDOJIUa9AKM4nkkxAOxsitI2JbkKAIA0V/2WG25aAAAAAElFTkSuQmCC);
+}
+
+.block.ear-left::before {
+  top: -20px;
+  left: -20px;
+}
+
+.block.ear-right::before {
+  top: -20px;
+  right: -20px;
+}
+
+.block.arm-left::before {
+  top: -15px;
+  left: -20px;
+}
+
+.block.arm-right::before {
+  top: -15px;
+  right: -20px;
+}
+
+.block.leg-left::before {
+  top: -15px;
+  left: -2px;
+}
+
+.block.leg-right::before {
+  top: -15px;
+  right: -2px;
 }
 
 
@@ -83,7 +203,7 @@ p, h1, h2, h3, h4 {
   position: absolute;
   height: 1px;
   width: 0;
-  border-top: solid #ffffff 1px;
+  /* border-top: solid #ffffff4a 1px; */
   transform-origin: left;
   z-index: -1;
 }
@@ -171,7 +291,7 @@ a:hover {
 .red {
   border-color: red;
 }
-
+/* 
 .yellow:after {
   background-color: yellow;
 }
@@ -186,4 +306,4 @@ a:hover {
 
 .purple:after {
   background-color: purple;
-}
+} */
