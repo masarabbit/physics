@@ -15,8 +15,9 @@ function init() {
   })
 
 
-  const setStyles = ({ el, x, y, w, deg }) =>{
-    if (w) el.style.width =px(w)
+  const setStyles = ({ el, x, y, w, h, deg }) =>{
+    if (w) el.style.width = px(w)
+    if (h) el.style.height = px(h)
     el.style.transform = `translate(${x ? px(x) : 0}, ${y ? px(y) : 0}) rotate(${deg || 0}deg)`
   }
   const px = num => `${num}px`
@@ -43,12 +44,13 @@ function init() {
   const settings = {
     k: 0.4,
     friction: 0.8,
-    bounce: -0.2,
+    bounce: 0.2,
     shapes: [],
     interval: null,
     grabInterval: null,
     gravity: 1,
     staticLines: [],
+    grabbedBlock: null
   }
 
   const blockShape = [
@@ -62,7 +64,19 @@ function init() {
     wrapper: document.querySelector('.wrapper'),
     machine: document.querySelector('.machine'),
     indicator: document.querySelector('.indicator'),
-    testBtn: document.querySelector('.test-btn')
+    testBtn: document.querySelector('.test-btn'),
+    verticalBtn: document.querySelector('.vertical-btn'),
+    machineArm: {
+      el: document.querySelector('.machine-arm-wrapper'),
+      motion: null,
+      x: 0,
+      y: 0,
+      arm: {
+        el: document.querySelector('.arm'),
+        y: 0,
+        h: 60,
+      }
+    }
   }
 
   const vector = {
@@ -212,6 +226,7 @@ function init() {
   const addTouchAction = block =>{
     const mousePos = { x: 0, y: 0 }
     const onGrab = e =>{
+      console.log('test', e)
       mouse.up(document, 'add', onLetGo)
       mouse.move(document, 'add', onDrag)
       mousePos.x = ePos(e, 'X')
@@ -242,8 +257,9 @@ function init() {
         if (b) b.acceleration = b.create(0, settings.gravity)  
       })
       clearInterval(settings.grabInterval)
+      // settings.bounce = -0.2
     }
-    settings.bounce = -0.2
+
     mouse.down(block.el,'add', onGrab)
   }
 
@@ -400,9 +416,12 @@ function init() {
           block.deg = angle - 90
           hitCheckLines(block)
           hitCheckWalls(block)
-          spaceOutShapes(block)
-          spaceOutBlocks(block)
-        
+          if (settings.grabbedBlock) {
+            // todo Test
+            if (!settings.shapes.find(shape => shape.id === settings.grabbedBlock.shapeId).blocks.some(b => b.id === block.id)) spaceOutShapes(block)    
+          } else {
+            spaceOutShapes(block)    
+          }  
           animateBlock(block)
         }
       })
@@ -478,6 +497,12 @@ function init() {
 
 
   createBlocks(blockShape)
+  createBlocks(blockShape)
+  createBlocks(blockShape)
+  createBlocks(blockShape)
+  createBlocks(blockShape)
+
+
   console.log(settings.shapes[0])
 
 
@@ -486,23 +511,7 @@ function init() {
 
 
 
-  setTimeout(()=> {
-    createBlocks(blockShape)
-  }, 3000)
 
-
-  setTimeout(()=> {
-    createBlocks(blockShape)
-  }, 4000)
-  
-
-  setTimeout(()=> {
-    createBlocks(blockShape)
-  }, 5000)
-  
-  setTimeout(()=> {
-    createBlocks(blockShape)
-  }, 6000)
   
 
   const addMarker = ({ x, y }) => {
@@ -521,9 +530,145 @@ function init() {
       y: pos.y + (distance * Math.sin(degToRad(angle - 90)))
     }
   }
+
+  const moveMachineArmHorizontally = () => {
+    if (elements.machineArm.motion === 'horizontal') {
+      if (elements.machineArm.x >= (elements.machine.offsetWidth - elements.machineArm.el.offsetWidth)) {
+        elements.machineArm.motion = 'stop-horizontal'
+      } else {
+        elements.machineArm.x += 10
+        setStyles(elements.machineArm)
+        setTimeout(()=> {
+          moveMachineArmHorizontally()
+        }, 100)
+      }
+    }
+  }
+
+  const moveMachineArmVertically = () => {
+    if (elements.machineArm.motion === 'vertical') {
+      if (elements.machineArm.y >= (elements.machine.offsetHeight - elements.machineArm.el.offsetHeight)) {
+        elements.machineArm.motion = 'stop-vertical'
+        setTimeout(()=> {
+          returnArm()
+        }, 800)
+      } else {
+        elements.machineArm.y += 10
+        setStyles(elements.machineArm)
+
+        elements.machineArm.arm.y = -elements.machineArm.y
+        elements.machineArm.arm.h += 10
+        setStyles(elements.machineArm.arm)
+        setTimeout(()=> {
+          moveMachineArmVertically()
+        }, 100)
+      }
+    }
+  }
+
+  const grab = point => {
+    const closestPoint = settings.shapes.map(shape => {
+      return shape.blocks.map(block => {
+        return {
+          dist: distanceBetween({ a: block, b: point}),
+          shapeId: block.shapeId,
+          blockId: block.id
+        }
+      })
+    }).flat(1).sort((a, b) => {
+      return a.dist - b.dist
+    })[0]
+    console.log(closestPoint)
+    if (closestPoint.dist < 30) {
+
+        // console.log(settings.grabbedBlockId)
+        const blockToGrab = settings.shapes.find(shape => shape.id === closestPoint.shapeId).blocks.find(block => block.id === closestPoint.blockId)
+        console.log(closestPoint, settings.shapes.find(shape => shape.id === closestPoint.shapeId).blocks, blockToGrab)
+        settings.grabbedBlock = blockToGrab
+
+        // TODO if I simulate mousemove, it will conflict with actual mouse movement, so better to do it other way
+
+        // const e = document.createEvent('MouseEvents')
+        // e.initMouseEvent('mousedown', true, true, window, 1, elements.machineArm.x + 15, elements.machineArm.y + 30, elements.machineArm.x + 15, elements.machineArm.y + 30)
+        // blockToGrab.el.dispatchEvent(e)
+
+        settings.shapes.forEach(shape => {
+          shape.blocks.forEach(b => {
+            if (b) b.acceleration = b.create(0, settings.gravity)  
+          })
+        })
+        clearInterval(settings.grabInterval)
+        settings.grabInterval = setInterval(()=> {
+          blockToGrab.acceleration = blockToGrab.create(
+            ((elements.machineArm.x + 15) - blockToGrab.x),
+            ((elements.machineArm.y + 30) - blockToGrab.y)
+          ) 
+        }, 30)
+        settings.bounce = 0.2
+      }
+    }
+
+  const returnArm = () => {
+    if (elements.machineArm.y > 0) {
+      elements.machineArm.y -= 10
+      setStyles(elements.machineArm)
   
+      elements.machineArm.arm.y = -elements.machineArm.y
+      elements.machineArm.arm.h -= 10
+      setStyles(elements.machineArm.arm)
+      setTimeout(()=> {
+        returnArm()
+      }, 50)
+    } else if (elements.machineArm.x > 0) {
+      elements.machineArm.x -= 10
+      setStyles(elements.machineArm)
+      setTimeout(()=> {
+        returnArm()
+      }, 50)
+    } else {
+      console.log('release')
+      if (settings.grabbedBlock) {
+        settings.shapes.find(b => b.id === settings.grabbedBlock.shapeId).blocks.forEach(b => {
+          if (b) b.acceleration = b.create(0, settings.gravity)  
+        })
+        clearInterval(settings.grabInterval)
+        // settings.bounce = -0.2
+        settings.grabbedBlock = null
+      }
+      elements.machineArm.motion = null
+    }
+  }
+  
+  elements.testBtn.addEventListener('click', ()=> {
+  if (!elements.machineArm.motion) {
+    elements.machineArm.motion = 'horizontal'
+    moveMachineArmHorizontally()
+    } else {
+      elements.machineArm.motion = 'stop-horizontal'
+    }
+  })
+
+  elements.verticalBtn.addEventListener('click', ()=> {
+    console.log('test', elements.machineArm.motion)
+    if (elements.machineArm.motion === 'stop-horizontal') {
+      elements.machineArm.motion = 'vertical'
+      moveMachineArmVertically()
+      } else if (elements.machineArm.motion === 'vertical') {
+        elements.machineArm.motion = 'stop-vertical'
+        grab({
+          x: elements.machineArm.x + 15,
+          y: elements.machineArm.y + 30
+        })
+        setTimeout(()=> {
+          returnArm()
+        }, 800)
+      }
+    })
 
 
+
+
+  
 }
   
 window.addEventListener('DOMContentLoaded', init)

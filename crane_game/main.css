@@ -56,6 +56,25 @@ p, h1, h2, h3, h4 {
 }
 
 
+.machine-arm-wrapper {
+  position: absolute;
+  left: 0;
+  top: 0;
+  border: 1px solid yellow;
+  --size: 60px;
+  width: var(--size);
+  height: var(--size);
+  transition: 0.1s;
+}
+
+.arm {
+  border: 1px solid white;
+  margin-left: 20px;
+  width: 20px;
+  height: var(--size);
+  transition: 0.1s;
+}
+
 
 
 
