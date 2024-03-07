@@ -320,8 +320,13 @@ function init() {
 
   const hitCheckLines = c => {
     lineData.forEach(l => {
+      const d1 = distanceBetween(c, l.start)
+      const d2 = distanceBetween(c, l.end)
+
       // this only works when velocity is from above
-      if ((c.x + c.radius > l.start.x) && (c.x - c.radius < l.end.x)) {
+      // if ((c.x + c.radius > l.start.x) && (c.x - c.radius < l.end.x)) 
+
+      if (d1 + d2 >= l.length - c.radius && d1 + d2 <= l.length + c.radius){
         const dot = (((c.x - l.start.x) * (l.end.x - l.start.x)) + ((c.y - l.start.y) * (l.end.y - l.start.y))) / Math.pow(l.length, 2)
         const closestXy = {
           x: l.start.x + (dot * (l.end.x - l.start.x)),
