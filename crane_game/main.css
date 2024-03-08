@@ -88,13 +88,13 @@ p, h1, h2, h3, h4 {
 }
 
 .block::after {
-  --size: 30px;
+  --size: calc(15px * var(--m));
   position: absolute;
   left: calc(-0.5 * var(--size));
   top: calc(-0.5 * var(--size));
   width: var(--size);
   height: var(--size);
-  border: 1px solid rgba(0, 0, 255, 0.786);
+  /* border: 1px solid rgba(0, 0, 255, 0.786); */
   content: '';
   z-index: 9;
   /* border-radius: 50%; */
@@ -104,10 +104,10 @@ p, h1, h2, h3, h4 {
 .block.head::before {
   position: absolute;
   content: '';
-  width: 90px;
-  height: 56px;
-  left: -45px;
-  top: -5px;
+  width: calc(var(--m) * 45px);
+  height: calc(var(--m) * 28px);
+  left: calc(var(--m) * -22.5px);
+  top: calc(var(--m) * -2px);
   /* border: 1px solid rgb(255, 230, 0); */
   z-index: 10;
   pointer-events: none;
@@ -119,10 +119,10 @@ p, h1, h2, h3, h4 {
 .block.mouth::before {
   position: absolute;
   content: '';
-  width: 38px;
-  height: 26px;
-  left: -19px;
-  top: -8px;
+  width: calc(var(--m) * 19px);
+  height: calc(var(--m) * 13px);
+  left: calc(var(--m) * -9.5px);
+  top: calc(var(--m) * -4px);
   /* border: 1px solid rgb(255, 230, 0); */
   pointer-events: none;
   background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABMAAAANCAYAAABLjFUnAAAAAXNSR0IArs4c6QAAAGhJREFUOE9jZICC6Q6C/2FsUunMA+8ZQXrABMigjP3vSDUDrn6GoxADyEBGfAaBFKEDXJaC1NLPMJCrkF2HLygIuoyUQMRpGEiCkCvQ5fG6DFvgw1yKzSL6eJOUsIKppb7LqJoDqJk3AS0sVC1piT+sAAAAAElFTkSuQmCC);
@@ -133,10 +133,10 @@ p, h1, h2, h3, h4 {
 .block.body::before {
   position: absolute;
   content: '';
-  width: 60px;
-  height: 40px;
-  left: -30px;
-  top: -15px;
+  width: calc(var(--m) * 30px);
+  height: calc(var(--m) * 20px);
+  left: calc(-15px * var(--m));
+  top: calc(-7px * var(--m));
   /* border: 1px solid rgb(72, 255, 0); */
   --w: 30px;
   --h: 20px;
@@ -181,41 +181,41 @@ p, h1, h2, h3, h4 {
   position: absolute;
   content: '';
   /* border: 1px solid rgb(255, 230, 0); */
-  width: 30px;
-  height: 30px;
+  width: calc(15px * var(--m));
+  height: calc(15px * var(--m));
   --w: 15px;
   --h: 15px;
   background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA8AAAAPCAYAAAA71pVKAAAAAXNSR0IArs4c6QAAAFxJREFUOE9jZICC6Q6C/2FsQnTmgfeMIDVgAqQxY/87Qnrg8jMchRhABjAia/z39w8DEzMLUYaADIBrJkUjyHQUzURZh6RoVDOJIUa9AKM4nkkxAOxsitI2JbkKAIA0V/2WG25aAAAAAElFTkSuQmCC);
 }
 
 .block.ear-left::before {
-  top: -16px;
-  left: -20px;
+  top: calc(var(--m) * -8px);
+  left: calc(var(--m) * -10px);
 }
 
 .block.ear-right::before {
-  top: -16px;
-  right: -20px;
+  top: calc(var(--m) * -8px);
+  right: calc(var(--m) * -10px);
 }
 
 .block.arm-left::before {
-  top: -15px;
-  left: -20px;
+  top: calc(var(--m) * -8px);
+  left: calc(var(--m) * -10px);
 }
 
 .block.arm-right::before {
-  top: -15px;
-  right: -20px;
+  top: calc(var(--m) * -8px);
+  right: calc(var(--m) * -10px);
 }
 
 .block.leg-left::before {
-  top: -15px;
-  left: -2px;
+  top: calc(var(--m) * -8px);
+  left: calc(var(--m) * -1px);
 }
 
 .block.leg-right::before {
-  top: -15px;
-  right: -2px;
+  top: calc(var(--m) * -8px);
+  right: calc(var(--m) * -1px);
 }
 
 
