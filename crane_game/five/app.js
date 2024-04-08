@@ -44,12 +44,11 @@ function init() {
   const settings = {
     k: 0.4,
     friction: 0.8,
-    // bounce: -0.5,
     bounce: 0.2,
     shapes: [],
     interval: null,
     grabInterval: null,
-    gravity: 2,
+    gravity: 1,
     staticLines: [],
     grabbedBlock: null
   }
@@ -143,10 +142,10 @@ function init() {
     block.accelerate = function(acceleration) {
       this.velocity.addTo(acceleration)
     }
-    // if (shape[y - 1]?.[x + 1]) data.lines.push({ start: block, endIndex: row * (y - 1) + x + 1 })
-    // if (shape[y][x + 1]) data.lines.push({ start: block, endIndex: row * y + x + 1 })
-    // if (shape?.[y + 1]?.[x]) data.lines.push({ start: block, endIndex: row * (y + 1) + x })
-    // if (shape?.[y + 1]?.[x + 1]) data.lines.push({ start: block, endIndex: row * (y + 1) + x + 1 })
+    if (shape[y - 1]?.[x + 1]) data.lines.push({ start: block, endIndex: row * (y - 1) + x + 1 })
+    if (shape[y][x + 1]) data.lines.push({ start: block, endIndex: row * y + x + 1 })
+    if (shape?.[y + 1]?.[x]) data.lines.push({ start: block, endIndex: row * (y + 1) + x })
+    if (shape?.[y + 1]?.[x + 1]) data.lines.push({ start: block, endIndex: row * (y + 1) + x + 1 })
 
     setStyles(block)
     elements.machine.append(block.el)
@@ -177,21 +176,21 @@ function init() {
         if (block) createBlock({ x, y, shape, data: newShape })
       })
     })
-    // const topRight = shape[0].length - 1
-    // const bottomRight = newShape.blocks.length - 1
-    // const bottomLeft = bottomRight - topRight
-    // newShape.lines.push({ start: newShape.blocks[0], endIndex: bottomRight })
-    // newShape.lines.push({ start: newShape.blocks[topRight], endIndex: bottomLeft })
+    const topRight = shape[0].length - 1
+    const bottomRight = newShape.blocks.length - 1
+    const bottomLeft = bottomRight - topRight
+    newShape.lines.push({ start: newShape.blocks[0], endIndex: bottomRight })
+    newShape.lines.push({ start: newShape.blocks[topRight], endIndex: bottomLeft })
 
-    // newShape.lines.push({ start: newShape.blocks[0], endIndex: topRight })
-    // newShape.lines.push({ start: newShape.blocks[topRight], endIndex: bottomRight })
-    // newShape.lines.push({ start: newShape.blocks[0], endIndex: bottomLeft })
-    // newShape.lines.push({ start: newShape.blocks[bottomLeft], endIndex: bottomRight })
+    newShape.lines.push({ start: newShape.blocks[0], endIndex: topRight })
+    newShape.lines.push({ start: newShape.blocks[topRight], endIndex: bottomRight })
+    newShape.lines.push({ start: newShape.blocks[0], endIndex: bottomLeft })
+    newShape.lines.push({ start: newShape.blocks[bottomLeft], endIndex: bottomRight })
 
-    // newShape.frameLines.push({ start: { x: 0, y: 0 }, end: { x: 0, y: 0 } })
-    // newShape.frameLines.push({ start: { x: 0, y: 0 }, end: { x: 0, y: 0 } })
-    // newShape.frameLines.push({ start: { x: 0, y: 0 }, end: { x: 0, y: 0 } })
-    // newShape.frameLines.push({ start: { x: 0, y: 0 }, end: { x: 0, y: 0 } })
+    newShape.frameLines.push({ start: { x: 0, y: 0 }, end: { x: 0, y: 0 } })
+    newShape.frameLines.push({ start: { x: 0, y: 0 }, end: { x: 0, y: 0 } })
+    newShape.frameLines.push({ start: { x: 0, y: 0 }, end: { x: 0, y: 0 } })
+    newShape.frameLines.push({ start: { x: 0, y: 0 }, end: { x: 0, y: 0 } })
 
     newShape.frameLines.forEach(line => {
       line.el = connector('white')
@@ -245,7 +244,7 @@ function init() {
           (mousePos.y - block.y) - top
         ) 
       }, 30)
-      // settings.bounce = 0.2
+      settings.bounce = 0.2
     }
     const onDrag = e =>{
       mousePos.x = ePos(e, 'X')
@@ -372,7 +371,7 @@ function init() {
         y: l.start.y + (dot * (l.end.y - l.start.y))
       }
       const fullDistance = distanceBetween({ a: b, b: closestXy })
-      b.velocity.multiplyBy(-0.6)
+      // b.velocity.multiplyBy(-0.6)
       if (fullDistance < b.radius) {
         b.velocity.multiplyBy(-0.06)
         const overlap = fullDistance - (b.radius)
@@ -499,9 +498,9 @@ function init() {
 
   createBlocks(blockShape)
   createBlocks(blockShape)
-  // createBlocks(blockShape)
-  // createBlocks(blockShape)
-  // createBlocks(blockShape)
+  createBlocks(blockShape)
+  createBlocks(blockShape)
+  createBlocks(blockShape)
 
 
   console.log(settings.shapes[0])
@@ -605,7 +604,7 @@ function init() {
             ((elements.machineArm.y + 30) - blockToGrab.y)
           ) 
         }, 30)
-        // settings.bounce = 0.2
+        settings.bounce = 0.2
       }
     }
 
