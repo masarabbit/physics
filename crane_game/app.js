@@ -45,11 +45,11 @@ function init() {
     k: 0.4,
     friction: 0.8,
     // bounce: -0.5,
-    bounce: 0.2,
+    bounce: -0.5,
     shapes: [],
     interval: null,
     grabInterval: null,
-    gravity: 2,
+    gravity: 1,
     staticLines: [],
     grabbedBlock: null
   }
@@ -143,10 +143,6 @@ function init() {
     block.accelerate = function(acceleration) {
       this.velocity.addTo(acceleration)
     }
-    // if (shape[y - 1]?.[x + 1]) data.lines.push({ start: block, endIndex: row * (y - 1) + x + 1 })
-    // if (shape[y][x + 1]) data.lines.push({ start: block, endIndex: row * y + x + 1 })
-    // if (shape?.[y + 1]?.[x]) data.lines.push({ start: block, endIndex: row * (y + 1) + x })
-    // if (shape?.[y + 1]?.[x + 1]) data.lines.push({ start: block, endIndex: row * (y + 1) + x + 1 })
 
     setStyles(block)
     elements.machine.append(block.el)
@@ -177,40 +173,14 @@ function init() {
         if (block) createBlock({ x, y, shape, data: newShape })
       })
     })
-    // const topRight = shape[0].length - 1
-    // const bottomRight = newShape.blocks.length - 1
-    // const bottomLeft = bottomRight - topRight
-    // newShape.lines.push({ start: newShape.blocks[0], endIndex: bottomRight })
-    // newShape.lines.push({ start: newShape.blocks[topRight], endIndex: bottomLeft })
 
-    // newShape.lines.push({ start: newShape.blocks[0], endIndex: topRight })
-    // newShape.lines.push({ start: newShape.blocks[topRight], endIndex: bottomRight })
-    // newShape.lines.push({ start: newShape.blocks[0], endIndex: bottomLeft })
-    // newShape.lines.push({ start: newShape.blocks[bottomLeft], endIndex: bottomRight })
-
-    // newShape.frameLines.push({ start: { x: 0, y: 0 }, end: { x: 0, y: 0 } })
-    // newShape.frameLines.push({ start: { x: 0, y: 0 }, end: { x: 0, y: 0 } })
-    // newShape.frameLines.push({ start: { x: 0, y: 0 }, end: { x: 0, y: 0 } })
-    // newShape.frameLines.push({ start: { x: 0, y: 0 }, end: { x: 0, y: 0 } })
 
     newShape.frameLines.forEach(line => {
       line.el = connector('white')
       elements.machine.appendChild(line.el)
     })
     
-    ;[
-      { index: 0, className: 'ear-left' },
-      { index: 1, className: 'head' },
-      { index: 2, className: 'ear-right' },
-      { index: 4, className: 'mouth' },
-      { index: 6, className: 'arm-left' },
-      { index: 7, className: 'body' },
-      { index: 8, className: 'arm-right' },
-      { index: 9, className: 'leg-left' },
-      { index: 11, className: 'leg-right' },
-    ].forEach(item => {
-      newShape.blocks[item.index].el.classList.add(item.className)
-    })
+
 
     newShape.lines.forEach(line => {
       if (!line.end) {
@@ -304,7 +274,7 @@ function init() {
           if (b.id === b2.id) return
           const distanceBetweenBlocks = distanceBetween({ a: b, b: b2 })
           if (distanceBetweenBlocks < (b.radius * 2)) {
-            // b.velocity.multiplyBy(-0.6)
+            b.velocity.multiplyBy(-0.6)
             const overlap = distanceBetweenBlocks - (b.radius * 2)
             b.setXy(
               getNewPosBasedOnTarget({
@@ -402,7 +372,7 @@ function init() {
 
   const animateBlocks = () => {
     settings.shapes.forEach(shape => {
-      const angle = radToDeg(angleTo({ a: shape.blocks[1], b: shape.blocks[7] }))
+      // const angle = radToDeg(angleTo({ a: shape.blocks[1], b: shape.blocks[7] }))
       shape.lines.forEach(line => {
         const d = line.end.subtract(line.start)
         d.setLength(d.magnitude() - line.length)
@@ -412,11 +382,15 @@ function init() {
         updateConnectors(line)
       })
 
+    
+
       shape.blocks.forEach(block => {
         if (block) {
-          block.deg = angle - 90
+          // block.deg = angle - 90
           hitCheckLines(block)
           hitCheckWalls(block)
+
+          spaceOutBlocks(block)
           if (settings.grabbedBlock) {
             // todo Test
             if (!settings.shapes.find(shape => shape.id === settings.grabbedBlock.shapeId).blocks.some(b => b.id === block.id)) spaceOutShapes(block)    
@@ -430,78 +404,14 @@ function init() {
     })
 
 
-    const corners = [
-      { index: 0, deg: -45, },
-      { index: 2, deg: 45, },
-      { index: 11, deg: 135, },
-      { index: 9, deg: -135, },
-    ].map(item => {
-      return getOffsetPos({
-        pos: settings.shapes[0].blocks[item.index],
-        distance: 30,
-        angle: item.deg + settings.shapes[0].blocks[item.index].deg
-      })
-    })
-
-    settings.shapes[0].frameLines[0].start = corners[1]
-    settings.shapes[0].frameLines[0].end = corners[0]
-    updateConnectors(settings.shapes[0].frameLines[0])
-
-    settings.shapes[0].frameLines[1].start = corners[2]
-    settings.shapes[0].frameLines[1].end = corners[1]
-    updateConnectors(settings.shapes[0].frameLines[1])
-
-    settings.shapes[0].frameLines[2].start = corners[3]
-    settings.shapes[0].frameLines[2].end = corners[2]
-    updateConnectors(settings.shapes[0].frameLines[2])
-
-    settings.shapes[0].frameLines[3].start = corners[3]
-    settings.shapes[0].frameLines[3].end = corners[0]
-    updateConnectors(settings.shapes[0].frameLines[3])
-
   }
 
-  const createLine = ({ start, end }) => {
-    const line = {
-      el: connector('white'),
-      start,
-      end,
-      id: `static-${settings.staticLines.length}`
-    }
-    elements.machine.appendChild(line.el)
-    settings.staticLines.push(line)
-    updateConnectors(line)
-  }
-  
-  // createLine({
-  //   start: { x: 50, y: 300 },
-  //   end: { x: 300, y: 400 },
-  // })
-
-  // createLine({
-  //   start: { x: 250, y: 400 },
-  //   end: { x: 700, y: 300 },
-  // })
-
-
-  // createLine({
-  //   start: { x: 700, y: 300 },
-  //   end: { x: 250, y: 400 },
-  // })
-
-
-  // createLine({
-  //   start: { x: 280, y: 200 },
-  //   end: { x: 300, y: 500 },
-  // })
 
 
 
   createBlocks(blockShape)
-  createBlocks(blockShape)
   // createBlocks(blockShape)
-  // createBlocks(blockShape)
-  // createBlocks(blockShape)
+
 
 
   console.log(settings.shapes[0])
@@ -532,139 +442,133 @@ function init() {
     }
   }
 
-  const moveMachineArmHorizontally = () => {
-    if (elements.machineArm.motion === 'horizontal') {
-      if (elements.machineArm.x >= (elements.machine.offsetWidth - elements.machineArm.el.offsetWidth)) {
-        elements.machineArm.motion = 'stop-horizontal'
-      } else {
-        elements.machineArm.x += 10
-        setStyles(elements.machineArm)
-        setTimeout(()=> {
-          moveMachineArmHorizontally()
-        }, 100)
-      }
-    }
-  }
+  // const moveMachineArmHorizontally = () => {
+  //   if (elements.machineArm.motion === 'horizontal') {
+  //     if (elements.machineArm.x >= (elements.machine.offsetWidth - elements.machineArm.el.offsetWidth)) {
+  //       elements.machineArm.motion = 'stop-horizontal'
+  //     } else {
+  //       elements.machineArm.x += 10
+  //       setStyles(elements.machineArm)
+  //       setTimeout(()=> {
+  //         moveMachineArmHorizontally()
+  //       }, 100)
+  //     }
+  //   }
+  // }
 
-  const moveMachineArmVertically = () => {
-    if (elements.machineArm.motion === 'vertical') {
-      if (elements.machineArm.y >= (elements.machine.offsetHeight - elements.machineArm.el.offsetHeight)) {
-        elements.machineArm.motion = 'stop-vertical'
-        setTimeout(()=> {
-          returnArm()
-        }, 800)
-      } else {
-        elements.machineArm.y += 10
-        setStyles(elements.machineArm)
+  // const moveMachineArmVertically = () => {
+  //   if (elements.machineArm.motion === 'vertical') {
+  //     if (elements.machineArm.y >= (elements.machine.offsetHeight - elements.machineArm.el.offsetHeight)) {
+  //       elements.machineArm.motion = 'stop-vertical'
+  //       setTimeout(()=> {
+  //         returnArm()
+  //       }, 800)
+  //     } else {
+  //       elements.machineArm.y += 10
+  //       setStyles(elements.machineArm)
 
-        elements.machineArm.arm.y = -elements.machineArm.y
-        elements.machineArm.arm.h += 10
-        setStyles(elements.machineArm.arm)
-        setTimeout(()=> {
-          moveMachineArmVertically()
-        }, 100)
-      }
-    }
-  }
+  //       elements.machineArm.arm.y = -elements.machineArm.y
+  //       elements.machineArm.arm.h += 10
+  //       setStyles(elements.machineArm.arm)
+  //       setTimeout(()=> {
+  //         moveMachineArmVertically()
+  //       }, 100)
+  //     }
+  //   }
+  // }
 
-  const grab = point => {
-    const closestPoint = settings.shapes.map(shape => {
-      return shape.blocks.map(block => {
-        return {
-          dist: distanceBetween({ a: block, b: point}),
-          shapeId: block.shapeId,
-          blockId: block.id
-        }
-      })
-    }).flat(1).sort((a, b) => {
-      return a.dist - b.dist
-    })[0]
-    console.log(closestPoint)
-    if (closestPoint.dist < 30) {
+  // const grab = point => {
+  //   const closestPoint = settings.shapes.map(shape => {
+  //     return shape.blocks.map(block => {
+  //       return {
+  //         dist: distanceBetween({ a: block, b: point}),
+  //         shapeId: block.shapeId,
+  //         blockId: block.id
+  //       }
+  //     })
+  //   }).flat(1).sort((a, b) => {
+  //     return a.dist - b.dist
+  //   })[0]
+  //   console.log(closestPoint)
+  //   if (closestPoint.dist < 30) {
 
-        // console.log(settings.grabbedBlockId)
-        const blockToGrab = settings.shapes.find(shape => shape.id === closestPoint.shapeId).blocks.find(block => block.id === closestPoint.blockId)
-        console.log(closestPoint, settings.shapes.find(shape => shape.id === closestPoint.shapeId).blocks, blockToGrab)
-        settings.grabbedBlock = blockToGrab
+  //       // console.log(settings.grabbedBlockId)
+  //       const blockToGrab = settings.shapes.find(shape => shape.id === closestPoint.shapeId).blocks.find(block => block.id === closestPoint.blockId)
+  //       console.log(closestPoint, settings.shapes.find(shape => shape.id === closestPoint.shapeId).blocks, blockToGrab)
+  //       settings.grabbedBlock = blockToGrab
 
-        // TODO if I simulate mousemove, it will conflict with actual mouse movement, so better to do it other way
+  //       settings.shapes.forEach(shape => {
+  //         shape.blocks.forEach(b => {
+  //           if (b) b.acceleration = b.create(0, settings.gravity)  
+  //         })
+  //       })
+  //       clearInterval(settings.grabInterval)
+  //       settings.grabInterval = setInterval(()=> {
+  //         blockToGrab.acceleration = blockToGrab.create(
+  //           ((elements.machineArm.x + 15) - blockToGrab.x),
+  //           ((elements.machineArm.y + 30) - blockToGrab.y)
+  //         ) 
+  //       }, 30)
+  //       // settings.bounce = 0.2
+  //     }
+  //   }
 
-        // const e = document.createEvent('MouseEvents')
-        // e.initMouseEvent('mousedown', true, true, window, 1, elements.machineArm.x + 15, elements.machineArm.y + 30, elements.machineArm.x + 15, elements.machineArm.y + 30)
-        // blockToGrab.el.dispatchEvent(e)
-
-        settings.shapes.forEach(shape => {
-          shape.blocks.forEach(b => {
-            if (b) b.acceleration = b.create(0, settings.gravity)  
-          })
-        })
-        clearInterval(settings.grabInterval)
-        settings.grabInterval = setInterval(()=> {
-          blockToGrab.acceleration = blockToGrab.create(
-            ((elements.machineArm.x + 15) - blockToGrab.x),
-            ((elements.machineArm.y + 30) - blockToGrab.y)
-          ) 
-        }, 30)
-        // settings.bounce = 0.2
-      }
-    }
-
-  const returnArm = () => {
-    if (elements.machineArm.y > 0) {
-      elements.machineArm.y -= 10
-      setStyles(elements.machineArm)
+  // const returnArm = () => {
+  //   if (elements.machineArm.y > 0) {
+  //     elements.machineArm.y -= 10
+  //     setStyles(elements.machineArm)
   
-      elements.machineArm.arm.y = -elements.machineArm.y
-      elements.machineArm.arm.h -= 10
-      setStyles(elements.machineArm.arm)
-      setTimeout(()=> {
-        returnArm()
-      }, 50)
-    } else if (elements.machineArm.x > 0) {
-      elements.machineArm.x -= 10
-      setStyles(elements.machineArm)
-      setTimeout(()=> {
-        returnArm()
-      }, 50)
-    } else {
-      console.log('release')
-      if (settings.grabbedBlock) {
-        settings.shapes.find(b => b.id === settings.grabbedBlock.shapeId).blocks.forEach(b => {
-          if (b) b.acceleration = b.create(0, settings.gravity)  
-        })
-        clearInterval(settings.grabInterval)
-        // settings.bounce = -0.2
-        settings.grabbedBlock = null
-      }
-      elements.machineArm.motion = null
-    }
-  }
+  //     elements.machineArm.arm.y = -elements.machineArm.y
+  //     elements.machineArm.arm.h -= 10
+  //     setStyles(elements.machineArm.arm)
+  //     setTimeout(()=> {
+  //       returnArm()
+  //     }, 50)
+  //   } else if (elements.machineArm.x > 0) {
+  //     elements.machineArm.x -= 10
+  //     setStyles(elements.machineArm)
+  //     setTimeout(()=> {
+  //       returnArm()
+  //     }, 50)
+  //   } else {
+  //     console.log('release')
+  //     if (settings.grabbedBlock) {
+  //       settings.shapes.find(b => b.id === settings.grabbedBlock.shapeId).blocks.forEach(b => {
+  //         if (b) b.acceleration = b.create(0, settings.gravity)  
+  //       })
+  //       clearInterval(settings.grabInterval)
+  //       // settings.bounce = -0.2
+  //       settings.grabbedBlock = null
+  //     }
+  //     elements.machineArm.motion = null
+  //   }
+  // }
   
-  elements.testBtn.addEventListener('click', ()=> {
-  if (!elements.machineArm.motion) {
-    elements.machineArm.motion = 'horizontal'
-    moveMachineArmHorizontally()
-    } else {
-      elements.machineArm.motion = 'stop-horizontal'
-    }
-  })
+  // elements.testBtn.addEventListener('click', ()=> {
+  // if (!elements.machineArm.motion) {
+  //   elements.machineArm.motion = 'horizontal'
+  //   moveMachineArmHorizontally()
+  //   } else {
+  //     elements.machineArm.motion = 'stop-horizontal'
+  //   }
+  // })
 
-  elements.verticalBtn.addEventListener('click', ()=> {
-    console.log('test', elements.machineArm.motion)
-    if (elements.machineArm.motion === 'stop-horizontal') {
-      elements.machineArm.motion = 'vertical'
-      moveMachineArmVertically()
-      } else if (elements.machineArm.motion === 'vertical') {
-        elements.machineArm.motion = 'stop-vertical'
-        grab({
-          x: elements.machineArm.x + 15,
-          y: elements.machineArm.y + 30
-        })
-        setTimeout(()=> {
-          returnArm()
-        }, 800)
-      }
-    })
+  // elements.verticalBtn.addEventListener('click', ()=> {
+  //   console.log('test', elements.machineArm.motion)
+  //   if (elements.machineArm.motion === 'stop-horizontal') {
+  //     elements.machineArm.motion = 'vertical'
+  //     moveMachineArmVertically()
+  //     } else if (elements.machineArm.motion === 'vertical') {
+  //       elements.machineArm.motion = 'stop-vertical'
+  //       grab({
+  //         x: elements.machineArm.x + 15,
+  //         y: elements.machineArm.y + 30
+  //       })
+  //       setTimeout(()=> {
+  //         returnArm()
+  //       }, 800)
+  //     }
+  //   })
 
 
 
