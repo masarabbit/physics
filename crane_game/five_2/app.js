@@ -42,13 +42,14 @@ function init() {
   }
 
   const settings = {
-    k: 0.4,
+    k: 0.42,
     friction: 0.5,
     bounce: 0.1,
     shapes: [],
     interval: null,
     grabInterval: null,
-    gravity: 5,
+    // grabData: null,
+    gravity: 4,
     staticLines: [],
     grabbedBlock: null
   }
@@ -221,8 +222,14 @@ function init() {
           (mousePos.x - block.x) - left,
           (mousePos.y - block.y) - top
         ) 
+        // settings.grabData = {
+        //   x: (mousePos.x - block.x),
+        //   y: (mousePos.y - block.y),
+        //   id: block.id,
+        //   shapeId: block.shapeId
+        // }
       }, 30)
-      settings.bounce = 0.2
+      settings.bounce = 0.1
     }
     const onDrag = e =>{
       mousePos.x = ePos(e, 'X')
@@ -235,6 +242,7 @@ function init() {
         if (b) b.acceleration = b.create(0, settings.gravity)  
       })
       clearInterval(settings.grabInterval)
+      // settings.grabData = null
       // settings.bounce = -0.2
     }
     mouse.down(block.el,'add', onGrab)
@@ -273,28 +281,28 @@ function init() {
   }
 
 
-  // const spaceOutBlocks = b => {
-  //   settings.shapes.forEach(shape =>{
-  //     shape.blocks.forEach(b2 => {
-  //       if (b2) {
-  //         if (b.id === b2.id) return
-  //         const distanceBetweenBlocks = distanceBetween({ a: b, b: b2 })
-  //         if (distanceBetweenBlocks < (b.radius * 2)) {
-  //           // b.velocity.multiplyBy(-0.6)
-  //           const overlap = distanceBetweenBlocks - (b.radius * 2)
-  //           b.setXy(
-  //             getNewPosBasedOnTarget({
-  //               start: b,
-  //               target: b2,
-  //               distance: (overlap / 2), 
-  //               fullDistance: distanceBetweenBlocks
-  //             })
-  //           )
-  //         }
-  //       }
-  //     })
-  //   })
-  // }
+  const spaceOutBlocks = b => {
+    settings.shapes.forEach(shape =>{
+      shape.blocks.forEach(b2 => {
+        if (b2) {
+          if (b.id === b2.id) return
+          const distanceBetweenBlocks = distanceBetween({ a: b, b: b2 })
+          if (distanceBetweenBlocks < (b.radius / 2)) {
+            b.velocity.multiplyBy(0.6)
+            const overlap = distanceBetweenBlocks - (b.radius / 2)
+            b.setXy(
+              getNewPosBasedOnTarget({
+                start: b,
+                target: b2,
+                distance: (overlap / 2), 
+                fullDistance: distanceBetweenBlocks
+              })
+            )
+          }
+        }
+      })
+    })
+  }
 
 
   const animateBlock = block => {
@@ -362,7 +370,7 @@ function init() {
         )
         b.velocity.multiplyBy(-0.6)
         b.acceleration.y = 0
-        // addMarker(      getNewPosBasedOnTarget({
+        // addMarker(getNewPosBasedOnTarget({
         //   start: b,
         //   target: closestXy,
         //   distance: overlap / 2, 
@@ -387,13 +395,12 @@ function init() {
         line.end.velocity.addTo(springForce.multiply(-1))
         updateConnectors(line)
       })
-
       shape.blocks.forEach(block => {
         if (block) {
           block.deg = angle - 90
           // hitCheckLines(block)
           hitCheckWalls(block)
-          // spaceOutBlocks(block)
+          spaceOutBlocks(block)
           if (settings.grabbedBlock) {
             // todo Test
             if (!settings.shapes.find(shape => shape.id === settings.grabbedBlock.shapeId).blocks.some(b => b.id === block.id)) spaceOutShapes(block)    
@@ -403,42 +410,26 @@ function init() {
           animateBlock(block)
         }
       })
-
     })
 
   }
 
-  const createLine = ({ start, end }) => {
-    const line = {
-      el: connector('white'),
-      start,
-      end,
-      id: `static-${settings.staticLines.length}`
-    }
-    elements.machine.appendChild(line.el)
-    settings.staticLines.push(line)
-    updateConnectors(line)
-  }
+  // const createLine = ({ start, end }) => {
+  //   const line = {
+  //     el: connector('white'),
+  //     start,
+  //     end,
+  //     id: `static-${settings.staticLines.length}`
+  //   }
+  //   elements.machine.appendChild(line.el)
+  //   settings.staticLines.push(line)
+  //   updateConnectors(line)
+  // }
   
 
-
-  // createBlocks(blockShape)
-  // createBlocks(blockShape)
   createBlocks(blockShape)
   createBlocks(blockShape)
   createBlocks(blockShape)
-
-
-  console.log(settings.shapes[0])
-
-
-
-  setInterval(animateBlocks, 30)
-
-
-
-
-  
 
   const addMarker = ({ x, y }) => {
     const marker = {
@@ -479,11 +470,11 @@ function init() {
           returnArm()
         }, 800)
       } else {
-        elements.machineArm.y += 10
+        elements.machineArm.y += 20
         setStyles(elements.machineArm)
 
         elements.machineArm.arm.y = -elements.machineArm.y
-        elements.machineArm.arm.h += 10
+        elements.machineArm.arm.h += 20
         setStyles(elements.machineArm.arm)
         setTimeout(()=> {
           moveMachineArmVertically()
@@ -511,12 +502,6 @@ function init() {
         const blockToGrab = settings.shapes.find(shape => shape.id === closestPoint.shapeId).blocks.find(block => block.id === closestPoint.blockId)
         settings.grabbedBlock = blockToGrab
 
-        // TODO if I simulate mousemove, it will conflict with actual mouse movement, so better to do it other way
-
-        // const e = document.createEvent('MouseEvents')
-        // e.initMouseEvent('mousedown', true, true, window, 1, elements.machineArm.x + 15, elements.machineArm.y + 30, elements.machineArm.x + 15, elements.machineArm.y + 30)
-        // blockToGrab.el.dispatchEvent(e)
-
         settings.shapes.forEach(shape => {
           shape.blocks.forEach(b => {
             if (b) b.acceleration = b.create(0, settings.gravity)  
@@ -529,7 +514,7 @@ function init() {
             ((elements.machineArm.y + 30) - blockToGrab.y)
           ) 
         }, 30)
-        settings.bounce = 0.2
+        settings.bounce = 0.1
       }
     }
 
@@ -590,10 +575,7 @@ function init() {
       }
     })
 
-
-
-
-  
+    setInterval(animateBlocks, 30)
 }
   
 window.addEventListener('DOMContentLoaded', init)
