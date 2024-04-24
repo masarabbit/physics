@@ -288,7 +288,7 @@ function init() {
           if (b.id === b2.id) return
           const distanceBetweenBlocks = distanceBetween({ a: b, b: b2 })
           if (distanceBetweenBlocks < (b.radius / 2)) {
-            b.velocity.multiplyBy(0.6)
+            // b.velocity.multiplyBy(-0.6)
             const overlap = distanceBetweenBlocks - (b.radius / 2)
             b.setXy(
               getNewPosBasedOnTarget({
