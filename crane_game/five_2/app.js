@@ -281,28 +281,28 @@ function init() {
   }
 
 
-  const spaceOutBlocks = b => {
-    settings.shapes.forEach(shape =>{
-      shape.blocks.forEach(b2 => {
-        if (b2) {
-          if (b.id === b2.id) return
-          const distanceBetweenBlocks = distanceBetween({ a: b, b: b2 })
-          if (distanceBetweenBlocks < (b.radius / 2)) {
-            // b.velocity.multiplyBy(-0.6)
-            const overlap = distanceBetweenBlocks - (b.radius / 2)
-            b.setXy(
-              getNewPosBasedOnTarget({
-                start: b,
-                target: b2,
-                distance: (overlap / 2), 
-                fullDistance: distanceBetweenBlocks
-              })
-            )
-          }
-        }
-      })
-    })
-  }
+  // const spaceOutBlocks = b => {
+  //   settings.shapes.forEach(shape =>{
+  //     shape.blocks.forEach(b2 => {
+  //       if (b2) {
+  //         if (b.id === b2.id) return
+  //         const distanceBetweenBlocks = distanceBetween({ a: b, b: b2 })
+  //         if (distanceBetweenBlocks < (b.radius / 2)) {
+  //           // b.velocity.multiplyBy(-0.6)
+  //           const overlap = distanceBetweenBlocks - (b.radius / 2)
+  //           b.setXy(
+  //             getNewPosBasedOnTarget({
+  //               start: b,
+  //               target: b2,
+  //               distance: (overlap / 2), 
+  //               fullDistance: distanceBetweenBlocks
+  //             })
+  //           )
+  //         }
+  //       }
+  //     })
+  //   })
+  // }
 
 
   const animateBlock = block => {
@@ -383,10 +383,31 @@ function init() {
   const hitCheckLines = b => {
     settings.staticLines.forEach(l => hitCheckLine(b, l))
   }
+  const getAngle = shape => {
+    const averageX = shape.blocks.reduce((a, c) => a + c.x, 0) / shape.blocks.length
+    const averageY = shape.blocks.reduce((a, c) => a + c.x, 0) / shape.blocks.length
+    const averagePoint = {
+      x: averageX,
+      y: averageY
+    }
+    const totalAngles = shape.blocks.reduce((a, b) => {
+      return a + radToDeg(angleTo({ a: b, b: averagePoint }))
+    }, 0)
+    return totalAngles / shape.blocks.length
+  }
+
+  const sum = arr => {
+    return arr.reduce((a, c) => {
+      return a + c.x
+    }, 0)
+  }
+
+  console.log('test', sum([{x: 0}, {x: 2},{x: 7},]))
 
   const animateBlocks = () => {
     settings.shapes.forEach(shape => {
       const angle = radToDeg(angleTo({ a: shape.blocks[1], b: shape.blocks[7] }))
+      console.log(getAngle(shape))
       shape.lines.forEach(line => {
         const d = line.end.subtract(line.start)
         d.setLength(d.magnitude() - line.length)
@@ -400,7 +421,7 @@ function init() {
           block.deg = angle - 90
           // hitCheckLines(block)
           hitCheckWalls(block)
-          spaceOutBlocks(block)
+          // spaceOutBlocks(block)
           if (settings.grabbedBlock) {
             // todo Test
             if (!settings.shapes.find(shape => shape.id === settings.grabbedBlock.shapeId).blocks.some(b => b.id === block.id)) spaceOutShapes(block)    
