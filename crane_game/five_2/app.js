@@ -383,17 +383,22 @@ function init() {
   const hitCheckLines = b => {
     settings.staticLines.forEach(l => hitCheckLine(b, l))
   }
+
+
+
   const getAngle = shape => {
-    const averageX = shape.blocks.reduce((a, c) => a + c.x, 0) / shape.blocks.length
-    const averageY = shape.blocks.reduce((a, c) => a + c.x, 0) / shape.blocks.length
+    const averageX = shape.blocks.reduce((a, c) => a + c.x, 0) / (shape.blocks.length - 1)
+    const averageY = shape.blocks.reduce((a, c) => a + c.x, 0) / (shape.blocks.length -1)
     const averagePoint = {
       x: averageX,
       y: averageY
     }
     const totalAngles = shape.blocks.reduce((a, b) => {
+      // console.log(averagePoint)
+      addMarker(averagePoint)
       return a + radToDeg(angleTo({ a: b, b: averagePoint }))
     }, 0)
-    return totalAngles / shape.blocks.length
+    return (totalAngles / shape.blocks.length)
   }
 
   const sum = arr => {
@@ -406,8 +411,10 @@ function init() {
 
   const animateBlocks = () => {
     settings.shapes.forEach(shape => {
-      const angle = radToDeg(angleTo({ a: shape.blocks[1], b: shape.blocks[7] }))
-      console.log(getAngle(shape))
+      // const angle = radToDeg(angleTo({ a: shape.blocks[1], b: shape.blocks[7] }))
+ 
+      const angle = getAngle(shape)
+      console.log(angle - 90)
       shape.lines.forEach(line => {
         const d = line.end.subtract(line.start)
         d.setLength(d.magnitude() - line.length)
@@ -418,7 +425,7 @@ function init() {
       })
       shape.blocks.forEach(block => {
         if (block) {
-          block.deg = angle - 90
+          block.deg = angle
           // hitCheckLines(block)
           hitCheckWalls(block)
           // spaceOutBlocks(block)
@@ -448,8 +455,8 @@ function init() {
   // }
   
 
-  createBlocks(blockShape)
-  createBlocks(blockShape)
+  // createBlocks(blockShape)
+  // createBlocks(blockShape)
   createBlocks(blockShape)
 
   const addMarker = ({ x, y }) => {
