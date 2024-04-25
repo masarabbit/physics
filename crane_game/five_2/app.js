@@ -19,6 +19,7 @@ function init() {
     if (w) el.style.width = px(w)
     if (h) el.style.height = px(h)
     el.style.transform = `translate(${x ? px(x) : 0}, ${y ? px(y) : 0}) rotate(${deg || 0}deg)`
+  // console.log('test', deg, el)
   }
   const px = num => `${num}px`
 
@@ -205,7 +206,7 @@ function init() {
   const addTouchAction = block =>{
     const mousePos = { x: 0, y: 0 }
     const onGrab = e =>{
-      console.log('test', e)
+      // console.log('test', e)
       mouse.up(document, 'add', onLetGo)
       mouse.move(document, 'add', onDrag)
       mousePos.x = ePos(e, 'X')
@@ -264,19 +265,22 @@ function init() {
     const buffer = 0
     if (b.x + b.radius + buffer > machineWidth) {
       b.x = machineWidth - (b.radius + buffer)
-      b.velocity.x = b.velocity.x * settings.bounce
+      b.velocity.x *= settings.bounce
     }
     if (b.x - (b.radius + buffer) < 0) {
       b.x = b.radius
-      b.velocity.x = b.velocity.x * settings.bounce
-    }
+      b.velocity.x *= settings.bounce
+    } 
     if (b.y + b.radius + buffer > machineHeight) {
       b.y = machineHeight - b.radius - buffer
-      b.velocity.y = b.velocity.y * settings.bounce
+      b.velocity.y *= settings.bounce
+      b.onGround = true
+    } else {
+      b.onGround = false
     }
     if (b.y - b.radius < 0) {
       b.y = b.radius
-      b.velocity.y = b.velocity.y * settings.bounce
+      b.velocity.y *= settings.bounce
     }
   }
 
@@ -314,7 +318,9 @@ function init() {
 
   const spaceOutShapes = b => {
     settings.shapes.forEach(shape => {
-      if (b.shapeId === shape.id) return
+      // if (b.shapeId === shape.id) return
+      if (b.shapeId === shape.id || !shape.blocks.some(b2 => b2.onGround || b2.inContact)) return
+
       const corners = [
         { index: 0, deg: -45, },
         { index: 2, deg: 45, },
@@ -340,7 +346,6 @@ function init() {
         })
       })
     })
-  
   }
 
 
@@ -356,9 +361,9 @@ function init() {
         y: l.start.y + (dot * (l.end.y - l.start.y))
       }
       const fullDistance = distanceBetween({ a: b, b: closestXy })
-      // b.velocity.multiplyBy(-0.6)
+      // b.velocity.multiplyBy(0.1)
       if (fullDistance < b.radius) {
-        b.velocity.multiplyBy(-0.06)
+        b.inContact = true
         const overlap = fullDistance - (b.radius)
         b.setXy(
           getNewPosBasedOnTarget({
@@ -368,7 +373,7 @@ function init() {
             fullDistance
           })
         )
-        b.velocity.multiplyBy(-0.6)
+        b.velocity.multiplyBy(0.1)
         b.acceleration.y = 0
         // addMarker(getNewPosBasedOnTarget({
         //   start: b,
@@ -376,6 +381,8 @@ function init() {
         //   distance: overlap / 2, 
         //   fullDistance
         // }))
+      } else {
+        b.inContact = false
       }
     }
   }
@@ -387,34 +394,26 @@ function init() {
 
 
   const getAngle = shape => {
-    const averageX = shape.blocks.reduce((a, c) => a + c.x, 0) / (shape.blocks.length - 1)
-    const averageY = shape.blocks.reduce((a, c) => a + c.x, 0) / (shape.blocks.length -1)
+    const averageX = shape.blocks.reduce((a, c) => a + c.x, 0) / (shape.blocks.length)
+    const averageY = shape.blocks.reduce((a, c) => a + c.y, 0) / (shape.blocks.length)
+
     const averagePoint = {
       x: averageX,
       y: averageY
     }
-    const totalAngles = shape.blocks.reduce((a, b) => {
-      // console.log(averagePoint)
-      addMarker(averagePoint)
-      return a + radToDeg(angleTo({ a: b, b: averagePoint }))
-    }, 0)
-    return (totalAngles / shape.blocks.length)
+    // this doesn't get total angle...
+    // const totalAngles = shape.blocks.reduce((a, b) => {
+    //   const angle = radToDeg(angleTo({ a: averagePoint, b }))
+    //   return a + angle
+    // }, 0)
+    // return totalAngles
+    return radToDeg(angleTo({ a: shape.blocks[1], b: averagePoint }))
   }
 
-  const sum = arr => {
-    return arr.reduce((a, c) => {
-      return a + c.x
-    }, 0)
-  }
-
-  console.log('test', sum([{x: 0}, {x: 2},{x: 7},]))
 
   const animateBlocks = () => {
-    settings.shapes.forEach(shape => {
-      // const angle = radToDeg(angleTo({ a: shape.blocks[1], b: shape.blocks[7] }))
- 
-      const angle = getAngle(shape)
-      console.log(angle - 90)
+    settings.shapes.forEach(shape => { 
+      const angle = getAngle(shape) - 90
       shape.lines.forEach(line => {
         const d = line.end.subtract(line.start)
         d.setLength(d.magnitude() - line.length)
@@ -425,12 +424,10 @@ function init() {
       })
       shape.blocks.forEach(block => {
         if (block) {
-          block.deg = angle
-          // hitCheckLines(block)
+          block.deg = Math.round(angle)
           hitCheckWalls(block)
           // spaceOutBlocks(block)
           if (settings.grabbedBlock) {
-            // todo Test
             if (!settings.shapes.find(shape => shape.id === settings.grabbedBlock.shapeId).blocks.some(b => b.id === block.id)) spaceOutShapes(block)    
           } else {
             spaceOutShapes(block)    
@@ -455,18 +452,18 @@ function init() {
   // }
   
 
-  // createBlocks(blockShape)
-  // createBlocks(blockShape)
+  createBlocks(blockShape)
+  createBlocks(blockShape)
   createBlocks(blockShape)
 
-  const addMarker = ({ x, y }) => {
-    const marker = {
-      el: Object.assign(document.createElement('div'), { className: 'test-marker' }),
-      x, y
-    }
-    elements.machine.appendChild(marker.el)
-    setStyles(marker)
-  }
+  // const addMarker = ({ x, y }) => {
+  //   const marker = {
+  //     el: Object.assign(document.createElement('div'), { className: 'test-marker' }),
+  //     x, y
+  //   }
+  //   elements.machine.appendChild(marker.el)
+  //   setStyles(marker)
+  // }
 
 
   const getOffsetPos = ({ pos, distance, angle }) => {
@@ -523,11 +520,11 @@ function init() {
     }).flat(1).sort((a, b) => {
       return a.dist - b.dist
     })[0]
-    console.log(closestPoint)
+    // console.log(closestPoint)
     if (closestPoint.dist < 30) {
-
         // console.log(settings.grabbedBlockId)
-        const blockToGrab = settings.shapes.find(shape => shape.id === closestPoint.shapeId).blocks.find(block => block.id === closestPoint.blockId)
+        const grabbedShape = settings.shapes.find(shape => shape.id === closestPoint.shapeId)
+        const blockToGrab = grabbedShape.blocks.find(block => block.id === closestPoint.blockId)
         settings.grabbedBlock = blockToGrab
 
         settings.shapes.forEach(shape => {
