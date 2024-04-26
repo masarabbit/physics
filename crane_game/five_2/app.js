@@ -374,7 +374,8 @@ function init() {
           })
         )
         b.velocity.multiplyBy(0.1)
-        b.acceleration.y = 0
+        // b.acceleration.y = 0
+        b.acceleration.y = 0.5
         // addMarker(getNewPosBasedOnTarget({
         //   start: b,
         //   target: closestXy,
