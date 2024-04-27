@@ -1,18 +1,18 @@
 
 function init() { 
 
-  const inputs = {
-    k: document.querySelector('.k'),
-    friction: document.querySelector('.friction')
-  }
+  // const inputs = {
+  //   k: document.querySelector('.k'),
+  //   friction: document.querySelector('.friction')
+  // }
 
-  inputs.k.addEventListener('change', e => {
-    settings.k = +e.target.value
-  })
+  // inputs.k.addEventListener('change', e => {
+  //   settings.k = +e.target.value
+  // })
 
-  inputs.friction.addEventListener('change', e => {
-    settings.friction = +e.target.value
-  })
+  // inputs.friction.addEventListener('change', e => {
+  //   settings.friction = +e.target.value
+  // })
 
 
   const setStyles = ({ el, x, y, w, h, deg }) =>{
@@ -67,7 +67,6 @@ function init() {
     machine: document.querySelector('.machine'),
     indicator: document.querySelector('.indicator'),
     testBtn: document.querySelector('.test-btn'),
-    verticalBtn: document.querySelector('.vertical-btn'),
     machineArm: {
       el: document.querySelector('.machine-arm-wrapper'),
       motion: null,
@@ -451,7 +450,7 @@ function init() {
   //   settings.staticLines.push(line)
   //   updateConnectors(line)
   // }
-  
+  createBlocks(blockShape)
 
   createBlocks(blockShape)
   createBlocks(blockShape)
@@ -576,20 +575,13 @@ function init() {
   }
   
   elements.testBtn.addEventListener('click', ()=> {
-  if (!elements.machineArm.motion) {
-    elements.machineArm.motion = 'horizontal'
-    moveMachineArmHorizontally()
-    } else {
-      elements.machineArm.motion = 'stop-horizontal'
-    }
-  })
-
-  elements.verticalBtn.addEventListener('click', ()=> {
-    console.log('test', elements.machineArm.motion)
-    if (elements.machineArm.motion === 'stop-horizontal') {
-      elements.machineArm.motion = 'vertical'
-      moveMachineArmVertically()
-      } else if (elements.machineArm.motion === 'vertical') {
+    if (!elements.machineArm.motion) {
+      elements.machineArm.motion = 'horizontal'
+      moveMachineArmHorizontally()
+      } else if ( elements.machineArm.motion === 'horizontal') {
+        elements.machineArm.motion = 'vertical'
+        setTimeout(moveMachineArmVertically, 200)
+      } else if ( elements.machineArm.motion === 'vertical') {
         elements.machineArm.motion = 'stop-vertical'
         grab({
           x: elements.machineArm.x + 15,
@@ -599,9 +591,9 @@ function init() {
           returnArm()
         }, 800)
       }
-    })
+  })
 
-    setInterval(animateBlocks, 30)
+  setInterval(animateBlocks, 30)
 }
   
 window.addEventListener('DOMContentLoaded', init)
