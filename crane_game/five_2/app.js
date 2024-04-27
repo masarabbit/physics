@@ -1,25 +1,10 @@
 
 function init() { 
 
-  // const inputs = {
-  //   k: document.querySelector('.k'),
-  //   friction: document.querySelector('.friction')
-  // }
-
-  // inputs.k.addEventListener('change', e => {
-  //   settings.k = +e.target.value
-  // })
-
-  // inputs.friction.addEventListener('change', e => {
-  //   settings.friction = +e.target.value
-  // })
-
-
   const setStyles = ({ el, x, y, w, h, deg }) =>{
     if (w) el.style.width = px(w)
     if (h) el.style.height = px(h)
     el.style.transform = `translate(${x ? px(x) : 0}, ${y ? px(y) : 0}) rotate(${deg || 0}deg)`
-  // console.log('test', deg, el)
   }
   const px = num => `${num}px`
 
@@ -49,7 +34,6 @@ function init() {
     shapes: [],
     interval: null,
     grabInterval: null,
-    // grabData: null,
     gravity: 4,
     staticLines: [],
     grabbedBlock: null
@@ -222,12 +206,6 @@ function init() {
           (mousePos.x - block.x) - left,
           (mousePos.y - block.y) - top
         ) 
-        // settings.grabData = {
-        //   x: (mousePos.x - block.x),
-        //   y: (mousePos.y - block.y),
-        //   id: block.id,
-        //   shapeId: block.shapeId
-        // }
       }, 30)
       settings.bounce = 0.1
     }
@@ -242,8 +220,6 @@ function init() {
         if (b) b.acceleration = b.create(0, settings.gravity)  
       })
       clearInterval(settings.grabInterval)
-      // settings.grabData = null
-      // settings.bounce = -0.2
     }
     mouse.down(block.el,'add', onGrab)
   }
@@ -283,31 +259,6 @@ function init() {
     }
   }
 
-
-  // const spaceOutBlocks = b => {
-  //   settings.shapes.forEach(shape =>{
-  //     shape.blocks.forEach(b2 => {
-  //       if (b2) {
-  //         if (b.id === b2.id) return
-  //         const distanceBetweenBlocks = distanceBetween({ a: b, b: b2 })
-  //         if (distanceBetweenBlocks < (b.radius / 2)) {
-  //           // b.velocity.multiplyBy(-0.6)
-  //           const overlap = distanceBetweenBlocks - (b.radius / 2)
-  //           b.setXy(
-  //             getNewPosBasedOnTarget({
-  //               start: b,
-  //               target: b2,
-  //               distance: (overlap / 2), 
-  //               fullDistance: distanceBetweenBlocks
-  //             })
-  //           )
-  //         }
-  //       }
-  //     })
-  //   })
-  // }
-
-
   const animateBlock = block => {
     block.accelerate(block.acceleration)
     block.velocity.multiplyBy(settings.friction)
@@ -317,7 +268,6 @@ function init() {
 
   const spaceOutShapes = b => {
     settings.shapes.forEach(shape => {
-      // if (b.shapeId === shape.id) return
       if (b.shapeId === shape.id || !shape.blocks.some(b2 => b2.onGround || b2.inContact)) return
 
       const corners = [
@@ -328,7 +278,7 @@ function init() {
       ].map(item => {
         return getOffsetPos({
           pos: shape.blocks[item.index],
-          distance: 30,
+          distance: 25,
           angle: item.deg + shape.blocks[item.index].deg
         })
       })
@@ -360,7 +310,6 @@ function init() {
         y: l.start.y + (dot * (l.end.y - l.start.y))
       }
       const fullDistance = distanceBetween({ a: b, b: closestXy })
-      // b.velocity.multiplyBy(0.1)
       if (fullDistance < b.radius) {
         b.inContact = true
         const overlap = fullDistance - (b.radius)
@@ -373,24 +322,12 @@ function init() {
           })
         )
         b.velocity.multiplyBy(0.1)
-        // b.acceleration.y = 0
         b.acceleration.y = 0.5
-        // addMarker(getNewPosBasedOnTarget({
-        //   start: b,
-        //   target: closestXy,
-        //   distance: overlap / 2, 
-        //   fullDistance
-        // }))
       } else {
         b.inContact = false
       }
     }
   }
-
-  const hitCheckLines = b => {
-    settings.staticLines.forEach(l => hitCheckLine(b, l))
-  }
-
 
 
   const getAngle = shape => {
@@ -426,7 +363,6 @@ function init() {
         if (block) {
           block.deg = Math.round(angle)
           hitCheckWalls(block)
-          // spaceOutBlocks(block)
           if (settings.grabbedBlock) {
             if (!settings.shapes.find(shape => shape.id === settings.grabbedBlock.shapeId).blocks.some(b => b.id === block.id)) spaceOutShapes(block)    
           } else {
@@ -436,7 +372,6 @@ function init() {
         }
       })
     })
-
   }
 
   // const createLine = ({ start, end }) => {
@@ -451,7 +386,6 @@ function init() {
   //   updateConnectors(line)
   // }
   createBlocks(blockShape)
-
   createBlocks(blockShape)
   createBlocks(blockShape)
   createBlocks(blockShape)
@@ -489,8 +423,14 @@ function init() {
 
   const moveMachineArmVertically = () => {
     if (elements.machineArm.motion === 'vertical') {
-      if (elements.machineArm.y >= (elements.machine.offsetHeight - elements.machineArm.el.offsetHeight)) {
+      const hasHitBottomLimit = elements.machineArm.y >= (elements.machine.offsetHeight - elements.machineArm.el.offsetHeight)
+      const nearestPoint = getClosestPoint({
+        x: elements.machineArm.x + 15,
+        y: elements.machineArm.y + 30
+      })
+      if (hasHitBottomLimit || nearestPoint?.dist < 30) {
         elements.machineArm.motion = 'stop-vertical'
+        grab(nearestPoint)
         setTimeout(()=> {
           returnArm()
         }, 800)
@@ -508,9 +448,10 @@ function init() {
     }
   }
 
-  const grab = point => {
-    const closestPoint = settings.shapes.map(shape => {
-      return shape.blocks.map(block => {
+  const getClosestPoint = point => {
+    return settings.shapes.map(shape => {
+      return shape.blocks.map((block, i) => {
+        // if (i === 4) return
         return {
           dist: distanceBetween({ a: block, b: point}),
           shapeId: block.shapeId,
@@ -520,28 +461,27 @@ function init() {
     }).flat(1).sort((a, b) => {
       return a.dist - b.dist
     })[0]
-    // console.log(closestPoint)
-    if (closestPoint.dist < 30) {
-        // console.log(settings.grabbedBlockId)
-        const grabbedShape = settings.shapes.find(shape => shape.id === closestPoint.shapeId)
-        const blockToGrab = grabbedShape.blocks.find(block => block.id === closestPoint.blockId)
-        settings.grabbedBlock = blockToGrab
+  } 
 
-        settings.shapes.forEach(shape => {
-          shape.blocks.forEach(b => {
-            if (b) b.acceleration = b.create(0, settings.gravity)  
-          })
-        })
-        clearInterval(settings.grabInterval)
-        settings.grabInterval = setInterval(()=> {
-          blockToGrab.acceleration = blockToGrab.create(
-            ((elements.machineArm.x + 15) - blockToGrab.x),
-            ((elements.machineArm.y + 30) - blockToGrab.y)
-          ) 
-        }, 30)
-        settings.bounce = 0.1
-      }
-    }
+  const grab = point => {
+    const grabbedShape = settings.shapes.find(shape => shape.id === point.shapeId)
+    const blockToGrab = grabbedShape.blocks.find(block => block.id === point.blockId)
+    settings.grabbedBlock = blockToGrab
+
+    settings.shapes.forEach(shape => {
+      shape.blocks.forEach(b => {
+        if (b) b.acceleration = b.create(0, settings.gravity)  
+      })
+    })
+    clearInterval(settings.grabInterval)
+    settings.grabInterval = setInterval(()=> {
+      blockToGrab.acceleration = blockToGrab.create(
+        ((elements.machineArm.x + 15) - blockToGrab.x),
+        ((elements.machineArm.y + 30) - blockToGrab.y)
+      ) 
+    }, 30)
+    settings.bounce = 0.1
+  }
 
   const returnArm = () => {
     if (elements.machineArm.y > 0) {
