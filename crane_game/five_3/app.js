@@ -407,10 +407,16 @@ function init() {
     }
   }
 
+  const triggerVerticalArmMovement = () => {
+    elements.machineArm.motion = 'vertical'
+    elements.machineArm.arm.el.classList.add('open')
+    setTimeout(moveMachineArmVertically, 200)
+  }
+
   const moveMachineArmHorizontally = () => {
     if (elements.machineArm.motion === 'horizontal') {
       if (elements.machineArm.x >= (elements.machine.offsetWidth - elements.machineArm.el.offsetWidth)) {
-        elements.machineArm.motion = 'stop-horizontal'
+        triggerVerticalArmMovement()
       } else {
         elements.machineArm.x += 10
         setStyles(elements.machineArm)
@@ -470,7 +476,11 @@ function init() {
 
     settings.shapes.forEach(shape => {
       shape.blocks.forEach(b => {
-        if (b) b.acceleration = b.create(0, settings.gravity)  
+        if (b) {
+          console.log(shape)
+          const gravity = point.shapeId === shape.id ? 0.5 : settings.gravity
+          b.acceleration = b.create(0, gravity)  
+        }
       })
     })
     clearInterval(settings.grabInterval)
@@ -526,9 +536,7 @@ function init() {
       elements.machineArm.motion = 'horizontal'
       moveMachineArmHorizontally()
       } else if ( elements.machineArm.motion === 'horizontal') {
-        elements.machineArm.motion = 'vertical'
-        elements.machineArm.arm.el.classList.add('open')
-        setTimeout(moveMachineArmVertically, 200)
+        triggerVerticalArmMovement()
       } else if ( elements.machineArm.motion === 'vertical') {
         elements.machineArm.motion = 'stop-vertical'
         grab({
