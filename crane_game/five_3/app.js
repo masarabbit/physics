@@ -477,7 +477,6 @@ function init() {
     settings.shapes.forEach(shape => {
       shape.blocks.forEach(b => {
         if (b) {
-          console.log(shape)
           const gravity = point.shapeId === shape.id ? 0.5 : settings.gravity
           b.acceleration = b.create(0, gravity)  
         }
