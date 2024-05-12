@@ -115,8 +115,8 @@ function init() {
       ...vector,
       el: Object.assign(document.createElement('div'), 
         { className: `block ${['yellow', 'blue', 'green', 'purple']?.[row * y + x]}` }),
-      x: (x * 30) + 100 + ((settings.shapes.length - 1) * 100), 
-      y: (y * 30) + 100,
+      x: (x * 15) + 100 + ((settings.shapes.length - 1) * 100), 
+      y: (y * 15) + 100,
       shapeId: data.id,
       id: `${data.id}-${row * y + x}`,
       radius: 15,
@@ -278,7 +278,7 @@ function init() {
       ].map(item => {
         return getOffsetPos({
           pos: shape.blocks[item.index],
-          distance: 25,
+          distance: 10,
           angle: item.deg + shape.blocks[item.index].deg
         })
       })
@@ -505,16 +505,18 @@ function init() {
       console.log('release')
       elements.machineArm.arm.el.classList.add('open')
       setTimeout(()=> {
-        elements.machineArm.arm.el.classList.remove('open')
+        if (settings.grabbedBlock) {
+          settings.shapes.find(b => b.id === settings.grabbedBlock.shapeId).blocks.forEach(b => {
+            if (b) b.acceleration = b.create(0, settings.gravity)  
+          })
+          clearInterval(settings.grabInterval)
+          settings.grabbedBlock = null
+        }
       }, 200)
-      if (settings.grabbedBlock) {
-        settings.shapes.find(b => b.id === settings.grabbedBlock.shapeId).blocks.forEach(b => {
-          if (b) b.acceleration = b.create(0, settings.gravity)  
-        })
-        clearInterval(settings.grabInterval)
-        // settings.bounce = -0.2
-        settings.grabbedBlock = null
-      }
+      setTimeout(()=> {
+        elements.machineArm.arm.el.classList.remove('open')
+      }, 500)
+    
       elements.machineArm.motion = null
     }
   }
