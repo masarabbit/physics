@@ -29,7 +29,7 @@ function init() {
 
   const settings = {
     k: 0.42,
-    friction: 0.5,
+    friction: 0.46,
     bounce: 0.1,
     shapes: [],
     interval: null,
