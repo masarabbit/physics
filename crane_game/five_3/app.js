@@ -471,7 +471,8 @@ function init() {
 
   const grab = point => {
     const grabbedShape = settings.shapes.find(shape => shape.id === point.shapeId)
-    const blockToGrab = grabbedShape.blocks.find(block => block.id === point.blockId)
+    const blockToGrab = grabbedShape?.blocks.find(block => block.id === point.blockId)
+    if (!blockToGrab)return
     settings.grabbedBlock = blockToGrab
 
     settings.shapes.forEach(shape => {
