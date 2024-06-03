@@ -358,16 +358,7 @@ function init() {
       x: averageX,
       y: averageY
     }
-    // this doesn't get total angle...
-    // const totalAngles = shape.blocks.reduce((a, b) => {
-    //   const angle = radToDeg(angleTo({ a: b, b: averagePoint }))
-  
-    //   const adjustedAngle = angle < 0 ? angle + 180 : angle
-    //   console.log()
-    //   return a + angle
-    // }, 0)
-    // console.log('total', shape.blocks.length)
-    // return totalAngles / (shape.blocks.length)
+
     return radToDeg(angleTo({ a: shape.blocks[1], b: averagePoint }))
   }
 
@@ -435,7 +426,7 @@ function init() {
       })
       if (hasHitBottomLimit || nearestPoint?.dist < 30) {
         elements.machineArm.motion = 'stop-vertical'
-        grab(nearestPoint)
+        if (nearestPoint?.dist < 30) grab(nearestPoint)
         setTimeout(()=> {
           returnArm()
         }, 800)

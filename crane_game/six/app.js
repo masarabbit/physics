@@ -28,7 +28,7 @@ function init() {
   }
 
   const settings = {
-    k: 0.2,
+    k: 0.8,
     friction: 0.3,
     bounce: 0.1,
     shapes: [],
@@ -246,7 +246,7 @@ function init() {
 
   const animateBlocks = () => {
     settings.shapes.forEach(shape => { 
-      const angle = getAngle(shape) - 90
+      // const angle = getAngle(shape) - 90
       shape.lines.forEach(line => {
         const d = line.end.subtract(line.start)
         d.setLength(d.magnitude() - line.length)
@@ -258,7 +258,7 @@ function init() {
       shape.blocks.forEach(block => {
         if (block) {
           spaceOutBlocks(block)
-          block.deg = Math.round(angle)
+          // block.deg = Math.round(angle)
           hitCheckWalls(block)
           animateBlock(block)
         }
@@ -381,8 +381,130 @@ function init() {
     }
   }
 
+  const moveMachineArmVertically = () => {
+    if (elements.machineArm.motion === 'vertical') {
+      const hasHitBottomLimit = elements.machineArm.y >= (elements.machine.offsetHeight - elements.machineArm.el.offsetHeight)
+      const nearestPoint = getClosestPoint({
+        x: elements.machineArm.x + 15,
+        y: elements.machineArm.y + 30
+      })
+      console.log('nearest', hasHitBottomLimit)
+      if (hasHitBottomLimit || nearestPoint?.dist < 30) {
+        elements.machineArm.motion = 'stop-vertical'
+        if (nearestPoint?.dist < 30) grab(nearestPoint)
+        setTimeout(()=> {
+          returnArm()
+        }, 800)
+      } else {
+        elements.machineArm.y += 20
+        setStyles(elements.machineArm)
 
-  // setInterval(animateBlocks, 16)
+        elements.machineArm.arm.y = -elements.machineArm.y
+        elements.machineArm.arm.h += 20
+        setStyles(elements.machineArm.arm)
+        setTimeout(()=> {
+          moveMachineArmVertically()
+        }, 100)
+      }
+    }
+  }
+
+  const getClosestPoint = point => {
+    return settings.shapes.map(shape => {
+      return shape.blocks.map((block, i) => {
+        if (i === 4) return
+        return {
+          dist: distanceBetween({ a: block, b: point}),
+          shapeId: block.shapeId,
+          blockId: block.id
+        }
+      })
+    }).flat(1).sort((a, b) => {
+      return a.dist - b.dist
+    })[0]
+  } 
+
+  const grab = point => {
+    const grabbedShape = settings.shapes.find(shape => shape.id === point.shapeId)
+    const blockToGrab = grabbedShape.blocks.find(block => block.id === point.blockId)
+    settings.grabbedBlock = blockToGrab
+
+    // settings.shapes.forEach(shape => {
+    //   shape.blocks.forEach(b => {
+    //     if (b) {
+    //       b.acceleration = b.create(0, settings.gravity)  
+    //     }
+    //   })
+    // })
+    clearInterval(settings.grabInterval)
+    settings.grabInterval = setInterval(()=> {
+      blockToGrab.acceleration = blockToGrab.create(
+        ((elements.machineArm.x + 15) - blockToGrab.x),
+        ((elements.machineArm.y + 30) - blockToGrab.y)
+      ) 
+    }, 30)
+    // settings.bounce = 0.1
+  }
+
+  const returnArm = () => {
+    elements.machineArm.arm.el.classList.remove('open')
+    if (elements.machineArm.y > 0) {
+      elements.machineArm.y -= 10
+      setStyles(elements.machineArm)
+  
+      elements.machineArm.arm.y = -elements.machineArm.y
+      elements.machineArm.arm.h -= 10
+      setStyles(elements.machineArm.arm)
+      setTimeout(()=> {
+        returnArm()
+      }, 50)
+    } else if (elements.machineArm.x > 0) {
+      elements.machineArm.x -= 10
+      setStyles(elements.machineArm)
+      setTimeout(()=> {
+        returnArm()
+      }, 50)
+    } else {
+      console.log('release')
+      elements.machineArm.arm.el.classList.add('open')
+      setTimeout(()=> {
+        if (settings.grabbedBlock) {
+          settings.shapes.find(b => b.id === settings.grabbedBlock.shapeId).blocks.forEach(b => {
+            if (b) b.acceleration = b.create(0, settings.gravity)  
+          })
+          clearInterval(settings.grabInterval)
+          settings.grabbedBlock = null
+        }
+      }, 200)
+      setTimeout(()=> {
+        elements.machineArm.arm.el.classList.remove('open')
+      }, 500)
+    
+      elements.machineArm.motion = null
+    }
+  }
+  
+  elements.testBtn.addEventListener('click', ()=> {
+    if (!elements.machineArm.motion) {
+      elements.machineArm.motion = 'horizontal'
+      moveMachineArmHorizontally()
+      } else if ( elements.machineArm.motion === 'horizontal') {
+        triggerVerticalArmMovement()
+      } else if ( elements.machineArm.motion === 'vertical') {
+        elements.machineArm.motion = 'stop-vertical'
+        grab({
+          x: elements.machineArm.x + 15,
+          y: elements.machineArm.y + 30
+        })
+        setTimeout(()=> {
+          returnArm()
+        }, 800)
+      }
+  })
+
+
+
+  setInterval(animateBlocks, 16)
 }
   
 window.addEventListener('DOMContentLoaded', init)
