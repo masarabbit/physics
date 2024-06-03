@@ -29,7 +29,7 @@ function init() {
 
   const settings = {
     k: 0.42,
-    friction: 0.5,
+    friction: 0.46,
     bounce: 0.1,
     shapes: [],
     interval: null,
@@ -356,6 +356,16 @@ function init() {
       x: averageX,
       y: averageY
     }
+    // this doesn't get total angle...
+    // const totalAngles = shape.blocks.reduce((a, b) => {
+    //   const angle = radToDeg(angleTo({ a: b, b: averagePoint }))
+  
+    //   const adjustedAngle = angle < 0 ? angle + 180 : angle
+    //   console.log()
+    //   return a + angle
+    // }, 0)
+    // console.log('total', shape.blocks.length)
+    // return totalAngles / (shape.blocks.length)
     return radToDeg(angleTo({ a: shape.blocks[1], b: averagePoint }))
   }
 
@@ -461,14 +471,13 @@ function init() {
     const blockToGrab = grabbedShape.blocks.find(block => block.id === point.blockId)
     settings.grabbedBlock = blockToGrab
 
-    settings.shapes.forEach(shape => {
-      shape.blocks.forEach(b => {
-        if (b) {
-          // const gravity = point.shapeId === shape.id ? 0.5 : settings.gravity
-          b.acceleration = b.create(0, settings.gravity)  
-        }
-      })
-    })
+    // settings.shapes.forEach(shape => {
+    //   shape.blocks.forEach(b => {
+    //     if (b) {
+    //       b.acceleration = b.create(0, settings.gravity)  
+    //     }
+    //   })
+    // })
     clearInterval(settings.grabInterval)
     settings.grabInterval = setInterval(()=> {
       blockToGrab.acceleration = blockToGrab.create(
@@ -537,7 +546,7 @@ function init() {
 
 
 
-  setInterval(animateBlocks, 30)
+  setInterval(animateBlocks, 16)
 }
   
 window.addEventListener('DOMContentLoaded', init)
