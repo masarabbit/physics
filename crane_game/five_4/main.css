@@ -139,7 +139,7 @@ p, h1, h2, h3, h4 {
 .block {
   position: absolute;
   --m: 2;
-  transition: 0.1s;
+  /* transition: 0.1s; */
   /* border: 1px solid rgb(255, 0, 255); */
 }
 

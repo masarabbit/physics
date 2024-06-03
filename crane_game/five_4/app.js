@@ -260,6 +260,7 @@ function init() {
         if (b.id === b2.id) return
         const distanceBetweenCapsules = distanceBetween({ a: b, b: b2 })
         if (distanceBetweenCapsules < (b.radius * 0.8)) {
+          b.velocity.multiplyBy(-0.3)
           const overlap = distanceBetweenCapsules - (b.radius * 2.2)
           b.setXy(
             getNewPosBasedOnTarget({
@@ -329,7 +330,7 @@ function init() {
       }
       const fullDistance = distanceBetween({ a: b, b: closestXy })
       if (fullDistance < b.radius) {
-        b.inContact = true
+        // b.inContact = true
         const overlap = fullDistance - (b.radius)
         b.setXy(
           getNewPosBasedOnTarget({
@@ -339,11 +340,12 @@ function init() {
             fullDistance
           })
         )
-        b.velocity.multiplyBy(0.1)
-        b.acceleration.y = 0.5
-      } else {
-        b.inContact = false
-      }
+        b.velocity.multiplyBy(0.05)
+        b.acceleration.y = 0.4
+      } 
+      // else {
+      //   b.inContact = false
+      // }
     }
   }
 
