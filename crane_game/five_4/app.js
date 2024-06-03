@@ -197,7 +197,7 @@ function init() {
           (mousePos.x - block.x) - left,
           (mousePos.y - block.y) - top
         ) 
-      }, 30)
+      }, 16)
       settings.bounce = 0.1
     }
     const onDrag = e =>{
@@ -376,14 +376,15 @@ function init() {
       })
       shape.blocks.forEach(block => {
         if (block) {
-          spaceOutBlocks(block)
           block.deg = Math.round(angle)
-          hitCheckWalls(block)
+    
           if (settings.grabbedBlock) {
             if (!settings.shapes.find(shape => shape.id === settings.grabbedBlock.shapeId).blocks.some(b => b.id === block.id)) spaceOutShapes(block)    
           } else {
             spaceOutShapes(block)    
           }  
+          spaceOutBlocks(block)
+          hitCheckWalls(block)
           animateBlock(block)
         }
       })
@@ -477,7 +478,7 @@ function init() {
         ((elements.machineArm.x + 15) - blockToGrab.x),
         ((elements.machineArm.y + 30) - blockToGrab.y)
       ) 
-    }, 30)
+    }, 16)
     // settings.bounce = 0.1
   }
 
