@@ -140,11 +140,11 @@ p, h1, h2, h3, h4 {
   position: absolute;
   --m: 2;
   /* transition: 0.1s; */
-  /* border: 1px solid rgb(255, 0, 255); */
+  border: 1px solid rgb(255, 0, 255);
 }
 
 .block::after {
-  --size: calc(12px * var(--m));
+  --size: calc(var(--radius) * var(--m));
   position: absolute;
   left: calc(-0.5 * var(--size));
   top: calc(-0.5 * var(--size));

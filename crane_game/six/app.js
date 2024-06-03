@@ -28,23 +28,16 @@ function init() {
   }
 
   const settings = {
-    k: 0.42,
-    friction: 0.46,
+    k: 0.2,
+    friction: 0.3,
     bounce: 0.1,
     shapes: [],
     interval: null,
     grabInterval: null,
-    gravity: 4,
-    staticLines: [],
+    gravity: 5,
     grabbedBlock: null
   }
 
-  const blockShape = [
-    [1, 1, 1],
-    [1, 1, 1],
-    [1, 1, 1],
-    [1, 1, 1],
-  ]
 
   const elements = {
     wrapper: document.querySelector('.wrapper'),
@@ -109,17 +102,17 @@ function init() {
   const connector = plus => Object.assign(document.createElement('div'), { className: `connector${plus ? ` ${plus}` : ''}` })
 
 
-  const createBlock = ({ shape, x, y, data }) => {
-    const row = shape[0].length
+  const createBlock = ({ x, y, data, radius, index }) => {
+    // const row = shape[0].length
     const block = {
       ...vector,
       el: Object.assign(document.createElement('div'), 
         { className: 'block' }),
-      x: (x * 15) + 100 + ((settings.shapes.length - 1) * 100), 
-      y: (y * 15) + 100,
+      x, 
+      y,
       shapeId: data.id,
-      id: `${data.id}-${row * y + x}`,
-      radius: 15,
+      id: `${data.id}-${index}`,
+      radius: radius || 15,
     }
     block.velocity = block.create(0, 0)
 
@@ -129,59 +122,21 @@ function init() {
     }
 
     setStyles(block)
+    block.el.style.setProperty('--radius', `${radius || 15}px`)
     elements.machine.append(block.el)
     data.blocks.push(block)
     addTouchAction(block)
   }
 
-  // const updateConnectors = line => {
-  //   line.x = line.start.x
-  //   line.y = line.start.y
-  //   line.w = distanceBetween({ a: line.start, b: line.end })
-  //   line.deg = radToDeg(angleTo({ a: line.start, b: line.end })) 
-  //   setStyles(line) 
-  // }
 
-  const createBlocks = shape => {
-    const newShape = {
-      blocks: [],
-      lines: [],
-      id: `shape-${settings.shapes.length}`,
-      frameLines: [],
-    }
-    settings.shapes.push(newShape)
-    shape.forEach((row, y) => {
-      row.forEach((block, x) => {
-        if (block) createBlock({ x, y, shape, data: newShape })
-      })
-    })
-
-    newShape.blocks.forEach((b, i) => {
-      newShape.blocks.forEach((b2, i2) => {
-        if (i2 > i) newShape.lines.push({ start: b, end: b2})
-      })
-    })
-    
-    newShape.lines.forEach(line => {
-      line.length = distanceBetween({ a: line.start, b: line.end }) * 1.6
-      line.el = connector()
-      line.id = newShape.id
-      elements.machine.appendChild(line.el)
-    })
-
-    ;[
-      { index: 0, className: 'ear-left' },
-      { index: 1, className: 'head' },
-      { index: 2, className: 'ear-right' },
-      { index: 6, className: 'arm-left' },
-      { index: 7, className: 'body' },
-      { index: 8, className: 'arm-right' },
-      { index: 9, className: 'leg-left' },
-      { index: 11, className: 'leg-right' },
-    ].forEach(item => {
-      newShape.blocks[item.index].el.classList.add(item.className)
-    })
+  const updateConnectors = line => {
+    line.x = line.start.x
+    line.y = line.start.y
+    line.w = distanceBetween({ a: line.start, b: line.end })
+    line.deg = radToDeg(angleTo({ a: line.start, b: line.end })) 
+    setStyles(line) 
   }
+
 
   const addTouchAction = block =>{
     const mousePos = { x: 0, y: 0 }
@@ -261,7 +216,7 @@ function init() {
         const distanceBetweenCapsules = distanceBetween({ a: b, b: b2 })
         if (distanceBetweenCapsules < (b.radius * 0.8)) {
           b.velocity.multiplyBy(-0.3)
-          const overlap = distanceBetweenCapsules - (b.radius * 2.2)
+          const overlap = distanceBetweenCapsules - (b.radius * 2.1)
           b.setXy(
             getNewPosBasedOnTarget({
               start: b,
@@ -275,79 +230,6 @@ function init() {
     })
   }
 
-  const getOffsetPos = ({ pos, distance, angle }) => {
-    return {
-      x: pos.x + (distance * Math.cos(degToRad(angle - 90))),
-      y: pos.y + (distance * Math.sin(degToRad(angle - 90)))
-    }
-  }
-
-
-  const spaceOutShapes = b => {
-    settings.shapes.forEach(shape => {
-      if (b.shapeId === shape.id 
-        // || !shape.blocks.some(b2 => b2.onGround || b2.inContact)
-      ) return
-
-      const corners = [
-        { index: 0, deg: -45, },
-        { index: 2, deg: 45, },
-        { index: 11, deg: 135, },
-        { index: 9, deg: -135, },
-      ].map(item => {
-        return getOffsetPos({
-          pos: shape.blocks[item.index],
-          distance: 10,
-          angle: item.deg + shape.blocks[item.index].deg
-        })
-      })
-
-      ;[
-        [0, 1],
-        [1, 2],
-        [2, 3],
-        [3, 0]
-      ].forEach(index => {
-        hitCheckLine(b, {
-          start: corners[index[0]],
-          end: corners[index[1]],
-        })
-      })
-    })
-  }
-
-
-  const hitCheckLine = (b, l) => {
-    const lineWidth = l.w || distanceBetween({ a: l.start, b: l.end })
-
-    const d1 = distanceBetween({ a: b, b: l.start })
-    const d2 = distanceBetween({ a: b, b: l.end })
-    if (d1 + d2 >= lineWidth - b.radius && d1 + d2 <= lineWidth + b.radius) {
-      const dot = (((b.x - l.start.x) * (l.end.x - l.start.x)) + ((b.y - l.start.y) * (l.end.y - l.start.y))) / Math.pow(lineWidth, 2)
-      const closestXy = {
-        x: l.start.x + (dot * (l.end.x - l.start.x)),
-        y: l.start.y + (dot * (l.end.y - l.start.y))
-      }
-      const fullDistance = distanceBetween({ a: b, b: closestXy })
-      if (fullDistance < b.radius) {
-        // b.inContact = true
-        const overlap = fullDistance - (b.radius)
-        b.setXy(
-          getNewPosBasedOnTarget({
-            start: b,
-            target: closestXy,
-            distance: overlap / 2, 
-            fullDistance
-          })
-        )
-        b.velocity.multiplyBy(0.05)
-        b.acceleration.y = 0.4
-      } 
-      // else {
-      //   b.inContact = false
-      // }
-    }
-  }
 
 
   const getAngle = shape => {
@@ -358,16 +240,6 @@ function init() {
       x: averageX,
       y: averageY
     }
-    // this doesn't get total angle...
-    // const totalAngles = shape.blocks.reduce((a, b) => {
-    //   const angle = radToDeg(angleTo({ a: b, b: averagePoint }))
-  
-    //   const adjustedAngle = angle < 0 ? angle + 180 : angle
-    //   console.log()
-    //   return a + angle
-    // }, 0)
-    // console.log('total', shape.blocks.length)
-    // return totalAngles / (shape.blocks.length)
     return radToDeg(angleTo({ a: shape.blocks[1], b: averagePoint }))
   }
 
@@ -381,18 +253,13 @@ function init() {
         const springForce = d.multiply(settings.k)
         line.start.velocity.addTo(springForce)
         line.end.velocity.addTo(springForce.multiply(-1))
-        // updateConnectors(line)
+        updateConnectors(line)
       })
       shape.blocks.forEach(block => {
         if (block) {
           spaceOutBlocks(block)
           block.deg = Math.round(angle)
           hitCheckWalls(block)
-          if (settings.grabbedBlock) {
-            if (!settings.shapes.find(shape => shape.id === settings.grabbedBlock.shapeId).blocks.some(b => b.id === block.id)) spaceOutShapes(block)    
-          } else {
-            spaceOutShapes(block)    
-          }  
           animateBlock(block)
         }
       })
@@ -400,10 +267,98 @@ function init() {
   }
 
 
-  createBlocks(blockShape)
-  createBlocks(blockShape)
-  createBlocks(blockShape)
-  createBlocks(blockShape)
+  const newShape = {
+    blocks: [],
+    lines: [],
+    id: `shape-${settings.shapes.length}`,
+  }
+  settings.shapes.push(newShape)
+
+  ;[
+    {
+      x: 100,
+      y: 100,
+      radius: 20,
+    },
+    {
+      x: 100,
+      y: 136,
+      radius: 16,
+    },
+    {
+      x: 70,
+      y: 120,
+      radius: 10,
+    },
+    {
+      x: 130,
+      y: 120,
+      radius: 10,
+    },
+    {
+      x: 86,
+      y: 164,
+      radius: 10,
+    },
+    {
+      x: 116,
+      y: 164,
+      radius: 10,
+    },
+  ].forEach((item, index) => {
+    createBlock({
+      ...item,
+      data: newShape,
+      index
+    })
+  })
+
+  ;[
+    {
+      start: 0,
+      end: 1
+    },
+    {
+      start: 2,
+      end: 1
+    },
+    {
+      start: 3,
+      end: 1
+    },
+    {
+      start: 4,
+      end: 1
+    },
+    {
+      start: 5,
+      end: 1
+    },
+  ].forEach(item=> {
+    newShape.lines.push({
+      start: newShape.blocks[item.start],
+      end: newShape.blocks[item.end],
+    })
+    // newShape.lines.push({
+    //   start: newShape.blocks[item.end],
+    //   end: newShape.blocks[item.start],
+    // })
+  })
+
+
+
+  newShape.lines.forEach(line => {
+    line.length = distanceBetween({ a: line.start, b: line.end }) * 1
+    line.el = connector()
+    line.id = newShape.id
+    elements.machine.appendChild(line.el)
+  })
+
+
+  // createBlocks(blockShape)
+  // createBlocks(blockShape)
+  // createBlocks(blockShape)
+  // createBlocks(blockShape)
 
 
   const triggerVerticalArmMovement = () => {
@@ -426,129 +381,8 @@ function init() {
     }
   }
 
-  const moveMachineArmVertically = () => {
-    if (elements.machineArm.motion === 'vertical') {
-      const hasHitBottomLimit = elements.machineArm.y >= (elements.machine.offsetHeight - elements.machineArm.el.offsetHeight)
-      const nearestPoint = getClosestPoint({
-        x: elements.machineArm.x + 15,
-        y: elements.machineArm.y + 30
-      })
-      if (hasHitBottomLimit || nearestPoint?.dist < 30) {
-        elements.machineArm.motion = 'stop-vertical'
-        grab(nearestPoint)
-        setTimeout(()=> {
-          returnArm()
-        }, 800)
-      } else {
-        elements.machineArm.y += 20
-        setStyles(elements.machineArm)
 
-        elements.machineArm.arm.y = -elements.machineArm.y
-        elements.machineArm.arm.h += 20
-        setStyles(elements.machineArm.arm)
-        setTimeout(()=> {
-          moveMachineArmVertically()
-        }, 100)
-      }
-    }
-  }
-
-  const getClosestPoint = point => {
-    return settings.shapes.map(shape => {
-      return shape.blocks.map((block, i) => {
-        if (i === 4) return
-        return {
-          dist: distanceBetween({ a: block, b: point}),
-          shapeId: block.shapeId,
-          blockId: block.id
-        }
-      })
-    }).flat(1).sort((a, b) => {
-      return a.dist - b.dist
-    })[0]
-  } 
-
-  const grab = point => {
-    const grabbedShape = settings.shapes.find(shape => shape.id === point.shapeId)
-    const blockToGrab = grabbedShape.blocks.find(block => block.id === point.blockId)
-    settings.grabbedBlock = blockToGrab
-
-    // settings.shapes.forEach(shape => {
-    //   shape.blocks.forEach(b => {
-    //     if (b) {
-    //       b.acceleration = b.create(0, settings.gravity)  
-    //     }
-    //   })
-    // })
-    clearInterval(settings.grabInterval)
-    settings.grabInterval = setInterval(()=> {
-      blockToGrab.acceleration = blockToGrab.create(
-        ((elements.machineArm.x + 15) - blockToGrab.x),
-        ((elements.machineArm.y + 30) - blockToGrab.y)
-      ) 
-    }, 30)
-    // settings.bounce = 0.1
-  }
-
-  const returnArm = () => {
-    elements.machineArm.arm.el.classList.remove('open')
-    if (elements.machineArm.y > 0) {
-      elements.machineArm.y -= 10
-      setStyles(elements.machineArm)
-  
-      elements.machineArm.arm.y = -elements.machineArm.y
-      elements.machineArm.arm.h -= 10
-      setStyles(elements.machineArm.arm)
-      setTimeout(()=> {
-        returnArm()
-      }, 50)
-    } else if (elements.machineArm.x > 0) {
-      elements.machineArm.x -= 10
-      setStyles(elements.machineArm)
-      setTimeout(()=> {
-        returnArm()
-      }, 50)
-    } else {
-      console.log('release')
-      elements.machineArm.arm.el.classList.add('open')
-      setTimeout(()=> {
-        if (settings.grabbedBlock) {
-          settings.shapes.find(b => b.id === settings.grabbedBlock.shapeId).blocks.forEach(b => {
-            if (b) b.acceleration = b.create(0, settings.gravity)  
-          })
-          clearInterval(settings.grabInterval)
-          settings.grabbedBlock = null
-        }
-      }, 200)
-      setTimeout(()=> {
-        elements.machineArm.arm.el.classList.remove('open')
-      }, 500)
-    
-      elements.machineArm.motion = null
-    }
-  }
-  
-  elements.testBtn.addEventListener('click', ()=> {
-    if (!elements.machineArm.motion) {
-      elements.machineArm.motion = 'horizontal'
-      moveMachineArmHorizontally()
-      } else if ( elements.machineArm.motion === 'horizontal') {
-        triggerVerticalArmMovement()
-      } else if ( elements.machineArm.motion === 'vertical') {
-        elements.machineArm.motion = 'stop-vertical'
-        grab({
-          x: elements.machineArm.x + 15,
-          y: elements.machineArm.y + 30
-        })
-        setTimeout(()=> {
-          returnArm()
-        }, 800)
-      }
-  })
-
-
-
-  setInterval(animateBlocks, 16)
+  // setInterval(animateBlocks, 16)
 }
   
 window.addEventListener('DOMContentLoaded', init)
