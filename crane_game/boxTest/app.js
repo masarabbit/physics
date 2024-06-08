@@ -276,16 +276,13 @@ function init() {
       shape.blocks.forEach(block => {
         if (block) {
           setStyles(axis)
-
-          newShape.lines.forEach(line => {
-            shape.lines.forEach(line => {
-              const d = line.end.subtract(line.start)
-              d.setLength(d.magnitude() - line.length)
-              const springForce = d.multiply(settings.k)
-              line.start.velocity.addTo(springForce)
-              line.end.velocity.addTo(springForce.multiply(-1))
-              updateConnectors(line)
-            })
+          
+          shape.lines.forEach(line => {
+            const d = line.end.subtract(line.start)
+            d.setLength(d.magnitude() - line.length)
+            const springForce = d.multiply(settings.k)
+            line.start.velocity.addTo(springForce)
+            line.end.velocity.addTo(springForce.multiply(-1))
             updateConnectors(line)
           })
           // block.wrapper.transformOrigin = `${axis.x}px ${axis.y}px`
