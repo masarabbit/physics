@@ -29,8 +29,8 @@ function init() {
   }
 
   const settings = {
-    k: 0.3,
-    friction: 0.45,
+    k: 0.5,
+    friction: 0.6,
     bounce: 0.1,
     shapes: [],
     interval: null,
@@ -38,6 +38,18 @@ function init() {
     gravity: 4,
     grabbedBlock: null
   }
+
+  // const settings = {
+  //   k: 0.42,
+  //   friction: 0.46,
+  //   bounce: 0.1,
+  //   shapes: [],
+  //   interval: null,
+  //   grabInterval: null,
+  //   gravity: 4,
+  //   staticLines: [],
+  //   grabbedBlock: null
+  // }
 
 
   const elements = {

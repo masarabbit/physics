@@ -362,6 +362,10 @@ function init() {
 
   createBlocks(blockShape)
 
+  setTimeout(()=> {
+    createBlocks(blockShape)
+  }, 3000)
+
 }
   
 window.addEventListener('DOMContentLoaded', init)
