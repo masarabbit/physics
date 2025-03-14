@@ -1,17 +1,12 @@
 
 function init() { 
 
-  const body = document.querySelector('body')
-
   const px = num => `${num}px`
+  const randomNo = (min, max) => min + (Math.floor(Math.random() * (max - min)))
 
-  const degToRad = deg => deg / (180 / Math.PI)
-  const radToDeg = rad => Math.round(rad * (180 / Math.PI))
-  const angleTo = ({ a, b }) => Math.atan2(b.y - a.y, b.x - a.x)
-  const distanceBetween = ({ a, b }) => Math.sqrt(Math.pow((a.x - b.x), 2) + Math.pow((a.y - b.y), 2))
-
-
-  const ePos = (e, type) => Math.round(e.type[0] === 'm' ? e[`page${type}`] : e.touches[0][`page${type}`])
+  // const degToRad = deg => deg / (180 / Math.PI)
+  // const radToDeg = rad => Math.round(rad * (180 / Math.PI))
+  // const ePos = (e, type) => Math.round(e.type[0] === 'm' ? e[`page${type}`] : e.touches[0][`page${type}`])
   
 
   const settings = {
@@ -19,26 +14,16 @@ function init() {
     bounce: 0.1,
     shapes: [],
     interval: null,
-    gravity: 5,
+    gravity: 4,
+    lines: [],
+    objects: []
   }
-
 
   const elements = {
     wrapper: document.querySelector('.wrapper'),
-    machine: document.querySelector('.machine'),
+    svg: document.querySelector('svg'),
     indicator: document.querySelector('.indicator'),
     testBtn: document.querySelector('.test-btn'),
-    machineArm: {
-      el: document.querySelector('.machine-arm-wrapper'),
-      motion: null,
-      x: 0,
-      y: 0,
-      arm: {
-        el: document.querySelector('.arm'),
-        y: 0,
-        h: 60,
-      }
-    }
   }
 
   class Vector {
@@ -62,6 +47,10 @@ function init() {
     get magnitude() {
       return Math.sqrt(this.x * this.x + this.y * this.y)
     }
+    setXy(xy) {
+      this.x = xy.x
+      this.y = xy.y
+    }
     addXy(xy) {
       this.x += xy.x
       this.y += xy.y
@@ -80,164 +69,256 @@ function init() {
     constructor(props) {
       Object.assign(this, {
         w: 0, h: 0, pos: { x: 0, y: 0 },
+        id: settings.objects.length,
         ...props,
       })
-      body.appendChild(this.el)
+      if (this.wrapper) {
+        this.el = this.wrapper.querySelector('.box')
+      }
+      elements.wrapper.appendChild(this.el)
       this.setStyles()
     }
     setStyles() {
       const { el, pos: { x, y }, w, h } = this
       if (w) el.style.width = px(w)
       if (h) el.style.height = px(h)
+      if (this.wrapper) {
+        Object.assign(el.style, {
+          marginTop: px(h * -0.5),
+          marginLeft: px(w * -0.5),
+        })
+      }
       el.style.transform = `translate(${x ? px(x) : 0}, ${y ? px(y) : 0})`
+    }
+    distanceBetween(target) {
+      return Math.sqrt(Math.pow((this.pos.x - target.x), 2) + Math.pow((this.pos.y - target.y), 2))
+    }
+    getNewPosBasedOnTarget = ({ target, distance: d, fullDistance }) => {
+      const { pos: { x: aX, y: aY } } = this
+      const { x: bX, y: bY } = target
+      const remainingD = fullDistance - d
+      return {
+        x: Math.round(((remainingD * aX) + (d * bX)) / fullDistance),
+        y: Math.round(((remainingD * aY) + (d * bY)) / fullDistance)
+      }
+    }
+    hitCheckLine(line) {  
+      const d1 = this.distanceBetween(line.start)
+      const d2 = this.distanceBetween(line.end)
+      if (d1 + d2 >= line.length - this.radius && d1 + d2 <= line.length + this.radius) {
+        const dot = (((this.pos.x - line.start.x) * (line.end.x - line.start.x)) + ((this.pos.y - line.start.y) * (line.end.y - line.start.y))) / Math.pow(line.length, 2)
+        const closestXy = {
+          x: line.start.x + (dot * (line.end.x - line.start.x)),
+          y: line.start.y + (dot * (line.end.y - line.start.y))
+        }
+        //  new Marker({ pos: closestXy })
+        const fullDistance = this.distanceBetween(closestXy)
+
+        if (fullDistance < this.radius) {
+          const overlap = fullDistance - (this.radius)
+          this.pos.setXy(
+            this.getNewPosBasedOnTarget({
+              target: closestXy,
+              distance: overlap / 2, 
+              fullDistance
+            })
+          )
+          // this.velocity.multiplyXy(1.1)
+          // this.acceleration.y = 7
+        } 
+      }
+    }
+    spaceOutObjects() {
+      settings.objects.forEach(o =>{
+        if (this.id === o.id) return
+        const distanceBetweenObjects = this.distanceBetween(o.pos)
+        if (distanceBetweenObjects < (this.radius * 2)) {
+          // this.velocity.multiplyXy(-0.3)
+          const overlap = distanceBetweenObjects - (this.radius * 2)
+          this.pos.setXy(
+            this.getNewPosBasedOnTarget({
+              target: o.pos,
+              distance: overlap / 2, 
+              fullDistance: distanceBetweenObjects
+            })
+          )
+          // new Marker({ pos: this.pos })
+        }
+      })
     }
   }
 
+  class Marker extends WorldObject {
+    constructor(props) {
+      super({
+        el: Object.assign(document.createElement('div'), { 
+          className: 'marker'
+        }),
+        ...props,
+      })
+    }
+  }
+
+  class Line {
+    constructor(props) {
+      Object.assign(this, {
+        el: document.createElementNS('http://www.w3.org/2000/svg','line'),
+        color: '#191919',
+        strokeWidth: 2,
+        start: { x: 0, y: 0 },
+        end: { x: 0, y: 0 },
+        ...props,
+      })
+      this.update()
+      elements.svg.appendChild(this.el)
+    }
+    get length() {
+      return Math.sqrt(Math.pow((this.start.x - this.end.x), 2) + Math.pow((this.start.y - this.end.y), 2))
+    }
+    update() {
+      const lineStyle = {
+        stroke: this.color,
+        'stroke-width': this.strokeWidth,
+        x1: this.start.x,
+        y1: this.start.y,
+        x2: this.end.x,
+        y2: this.end.y,
+      }
+      Object.keys(lineStyle).forEach(key => {
+        this.el.setAttribute(key, lineStyle[key])
+      })
+    }
+  }
 
   class GravityObject extends WorldObject {
     constructor(props) {
       super({
-        el: Object.assign(document.createElement('div'), { className: 'box' }),
+        wrapper: Object.assign(document.createElement('div'), { 
+          innerHTML: '<div class="box">future</div>'
+        }),
         pos: new Vector({ x: props.x, y: props.y }),
         velocity: new Vector({ x: 0, y: 0.1 }),
         acceleration: new Vector({ x: 0, y: settings.gravity }),
-        w: 40,
-        h: 40,
+        w: 30,
+        h: 15,
+        radius: 10,
         ...props,
       })
     }
     accelerate() {
       this.velocity.addXy(this.acceleration)
     }
-    animateBlock() {
+    animateObject() {
+      // const originalPos = this.pos
       this.accelerate()
       this.velocity.multiplyXy(settings.friction)
-      this.pos.addXy(this.velocity)
-      this.setStyles()
-      requestAnimationFrame(()=> this.animateBlock())
-    }
-  }
 
-
-  const updateConnectors = line => {
-    line.x = line.start.x
-    line.y = line.start.y
-    line.w = distanceBetween({ a: line.start, b: line.end })
-    line.deg = radToDeg(angleTo({ a: line.start, b: line.end })) 
-    setStyles(line) 
-  }
-
-
-  const addTouchAction = block =>{
-    const mousePos = { x: 0, y: 0 }
-    const onGrab = e =>{
-      mouse.up(document, 'add', onLetGo)
-      mouse.move(document, 'add', onDrag)
-      mousePos.x = ePos(e, 'X')
-      mousePos.y = ePos(e, 'Y')
-
- 
-
-      clearInterval(settings.grabInterval)
-      settings.grabInterval = setInterval(()=> {
-
-        const { left, top } = elements.machine.getBoundingClientRect()
-        block.grabPoint.x = mousePos.x - left
-        block.grabPoint.y = mousePos.y - top
-        setStyles(block.grabPoint)
-      
-      }, 100)
-      // settings.bounce = 0.1
-    }
-    const onDrag = e =>{
-      mousePos.x = ePos(e, 'X')
-      mousePos.y = ePos(e, 'Y')
-      setStyles(block.grabPoint)
-    }
-    const onLetGo = () => {
-      mouse.up(document, 'remove', onLetGo)
-      mouse.move(document,'remove', onDrag)  
-      settings.shapes.find(b => b.id === block.shapeId).blocks.forEach(b => {
-        if (b) b.acceleration = b.create(0, settings.gravity)  
+      this.spaceOutObjects()
+      settings.lines.forEach(l => {
+        this.hitCheckLine(l)
       })
-      clearInterval(settings.grabInterval)
+      this.hitCheckWalls()
+      this.pos.addXy(this.velocity)
+      // if (!this.pos.x || !this.pos.y) {
+      //   console.log(originalPos)
+      //   this.pos.setXy(originalPos)
+      // }
+      this.setStyles()
+
+      this.el.innerHTML = this.pos.y < 220
+        ? 'future'
+        : Math.abs(this.pos.y - 200) < 40
+        ? 'now'
+        : 'past'
+      requestAnimationFrame(()=> this.animateObject())
     }
-    mouse.down(block.el,'add', onGrab)
+    hitCheckWalls() {
+      const { width, height } = elements.wrapper.getBoundingClientRect()
+      const buffer = 0
+      if (this.pos.x + this.radius + buffer > width) {
+        this.pos.x = width - this.radius
+        this.velocity.x *= settings.bounce
+      }
+      if (this.pos.x - (this.radius + buffer) < 0) {
+        this.pos.x = this.radius
+        this.velocity.x *= settings.bounce
+      } 
+      if (this.pos.y + this.radius + buffer > height) {
+        this.pos.y = height - this.radius
+        this.velocity.y *= settings.bounce
+      }
+      if (this.pos.y - this.radius < 0) {
+        this.pos.y = this.radius
+        this.velocity.y *= settings.bounce
+      }
+    }
   }
 
-  const getNewPosBasedOnTarget = ({ start, target, distance: d, fullDistance }) => {
-    const { x: aX, y: aY } = start
-    const { x: bX, y: bY } = target
-    const remainingD = fullDistance - d
-    return {
-      x: Math.round(((remainingD * aX) + (d * bX)) / fullDistance),
-      y: Math.round(((remainingD * aY) + (d * bY)) / fullDistance)
-    }
-  }
-
-  // const { width: machineWidth, height: machineHeight } = elements.machine.getBoundingClientRect()
-
-  const hitCheckWalls = b => {
-    const buffer = 0
-    if (b.x + b.radius + buffer > machineWidth) {
-      b.x = machineWidth - b.radius
-      b.velocity.x *= settings.bounce
-    }
-    if (b.x - (b.radius + buffer) < 0) {
-      b.x = b.radius
-      b.velocity.x *= settings.bounce
-    } 
-    if (b.y + b.radius + buffer > machineHeight) {
-      b.y = machineHeight - b.radius
-      b.velocity.y *= settings.bounce
-    }
-    if (b.y - b.radius < 0) {
-      b.y = b.radius
-      b.velocity.y *= settings.bounce
-    }
-  }
+  new Array(40).fill('').map(() => {
+    return { x: randomNo(20, 270), y: randomNo(20, 120) }
+  }).forEach(b => {
+    settings.objects.push(new GravityObject(b))
+  })
 
 
+  ;[
+    {
+      start: { x: 0, y: 0 },
+      end: { x: 10, y: 100 }
+    },
+    {
+      start: { x: 10, y: 100 },
+      end: { x: 60, y: 180 }
+    },
+    {
+      start: { x: 60, y: 180 },
+      end: { x: 130, y: 220 }
+    },
+    // waist
+    {
+      start: { x: 130, y: 220 },
+      end: { x: 60, y: 260 }
+    },
+    {
+      start: { x: 60, y: 260 },
+      end: { x: 10, y: 340 }
+    },
+    {
+      start: { x: 10, y: 340 },
+      end: { x: 0, y: 440 }
+    },
+    // right
+    {
+      start: { x: 300, y: 0 },
+      end: { x: 290, y: 100 }
+    },
+    {
+      start: { x: 290, y: 100 },
+      end: { x: 240, y: 180 }
+    },
+    {
+      start: { x: 240, y: 180 },
+      end: { x: 170, y: 220 }
+    },
+    // waist
+    {
+      start: { x: 170, y: 220 },
+      end: { x: 240, y: 260 }
+    },
+    {
+      start: { x: 240, y: 260 },
+      end: { x: 290, y: 340 }
+    },
+    {
+      start: { x: 290, y: 340 },
+      end: { x: 300, y: 440 }
+    },
+  ].forEach(l => settings.lines.push(new Line(l)))
+  
 
-  const block = new GravityObject({ x: 10, y: 0 })
-
-  // const animateBlocks = () => {
-  //   settings.shapes.forEach(shape => { 
-
-  //     shape.blocks.forEach(block => {
-  //       if (block) {
-  //         animateBlock(block)
-  //       }
-  //     })
-  //   })
-  // }
+  settings.objects.forEach(o => requestAnimationFrame(()=> o.animateObject()))
 
 
-
-  const newShape = {
-    blocks: [],
-    lines: [],
-    id: `shape-${settings.shapes.length}`,
-  }
-  settings.shapes.push(newShape)
-
-
-  // newShape.lines.push({
-  //   start: newShape.blocks[0],
-  //   end: newShape.blocks[0].grabPoint,
-  // })
-
-  // newShape.lines.forEach(line => {
-  //   line.length = distanceBetween({ a: line.start, b: line.end }) * 1
-  //   line.el = connector()
-  //   line.id = newShape.id
-  //   elements.machine.appendChild(line.el)
-  // })
- 
-  // setInterval(()=> {
-  //   block.animateBlock()
-  // }, 20)
-  requestAnimationFrame(()=> block.animateBlock())
 }
   
 window.addEventListener('DOMContentLoaded', init)
