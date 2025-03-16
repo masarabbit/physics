@@ -182,8 +182,9 @@ function init() {
         end: { x: 0, y: 0 },
         ...props,
       })
-      this.update()
-      elements.svg.appendChild(this.el)
+      //* uncomment to see the actual svg line
+      // this.update()
+      // elements.svg.appendChild(this.el)
     }
     get length() {
       return Math.sqrt(Math.pow((this.start.x - this.end.x), 2) + Math.pow((this.start.y - this.end.y), 2))
@@ -221,7 +222,8 @@ function init() {
         w: 30,
         h: 15,
         radius: 10,
-        fadeInterval: null,
+        isAtBottom: false,
+        isFaded: false,
         ...props,
       })
     }
@@ -311,21 +313,22 @@ function init() {
         this.pos.x = this.defPos.x 
         this.pos.y = 0
         this.isFaded = false
-        this.fadeInterval = setTimeout(()=> {
+        this.isAtBottom = false
+        setTimeout(()=> {
           this.el.classList.remove('fade-in')
         }, 2000)
       }, 1000)
     }
     fadeAndFadeIn() {
-      clearInterval(this.fadeInterval)
       this.el.classList.add('fade-out')
       this.isFaded = true
       this.fadeIn()
     }
     reset() {
-      this.el.classList.add('fade-instant')
+      this.el.classList.add('d-none')
       this.isFaded = true
       this.fadeIn()
+      console.log('check')
     }
     animateObject() {
       this.spaceOutObjects()
@@ -346,7 +349,8 @@ function init() {
         ? 'now'
         : 'past' 
 
-      if (this.pos.y > 430 && !this.isFaded) {
+      if (this.pos.y > 430 && !this.isAtBottom) {
+        this.isAtBottom = true
         setTimeout(()=> {
           this.fadeAndFadeIn()
         }, 1500)
@@ -358,7 +362,6 @@ function init() {
   // const timeSeed = [ { x: 144, y: 95 }, { x: 72, y: 95 }, { x: 148, y: 132 }, { x: 108, y: 96 }, { x: 198, y: 184 }, { x: 221, y: 95 }, { x: 229, y: 77 }, { x: 133, y: 184 }, { x: 111, y: 40 }, { x: 145, y: 40 }, { x: 52, y: 131 }, { x: 258, y: 94 }, { x: 76, y: 167 }, { x: 271, y: 57 }, { x: 39, y: 93 }, { x: 234, y: 149 }, { x: 248, y: 130 }, { x: 83, y: 132 }, { x: 184, y: 131 }, { x: 79, y: 114 }, { x: 100, y: 185 }, { x: 169, y: 58 }, { x: 42, y: 40 }, { x: 131, y: 202 }, { x: 251, y: 40 }, { x: 118, y: 77 }, { x: 187, y: 113 }, { x: 130, y: 150 }, { x: 181, y: 40 }, { x: 98, y: 58 }, { x: 220, y: 113 }, { x: 64, y: 149 }, { x: 75, y: 40 }, { x: 64, y: 58 }, { x: 133, y: 58 }, { x: 166, y: 203 }, { x: 42, y: 113 }, { x: 81, y: 77 }, { x: 115, y: 114 }, { x: 115, y: 132 }, { x: 150, y: 114 }, { x: 109, y: 168 }, { x: 263, y: 75 }, { x: 217, y: 131 }, { x: 163, y: 149 }, { x: 218, y: 40 }, { x: 221, y: 168 }, { x: 204, y: 58 }, { x: 166, y: 185 }, { x: 182, y: 95 }, { x: 95, y: 149 }, { x: 198, y: 149 }, { x: 157, y: 77 }, { x: 147, y: 167 }, { x: 239, y: 57 }, { x: 32, y: 58 }, { x: 44, y: 77 }, { x: 193, y: 77 }, { x: 255, y: 112 }, { x: 184, y: 167 } ]
   const timeSeed = [ { x: 93, y: 30 }, { x: 201, y: 30 }, { x: 129, y: 31 }, { x: 166, y: 31 }, { x: 176, y: 47 }, { x: 211, y: 47 }, { x: 73, y: 48 }, { x: 142, y: 48 }, { x: 39, y: 49 }, { x: 108, y: 49 }, { x: 245, y: 49 }, { x: 169, y: 64 }, { x: 133, y: 65 }, { x: 236, y: 65 }, { x: 32, y: 66 }, { x: 67, y: 66 }, { x: 99, y: 66 }, { x: 204, y: 66 }, { x: 268, y: 66 }, { x: 32, y: 84 }, { x: 70, y: 84 }, { x: 104, y: 84 }, { x: 144, y: 84 }, { x: 181, y: 84 }, { x: 223, y: 85 }, { x: 259, y: 85 }, { x: 105, y: 102 }, { x: 141, y: 102 }, { x: 35, y: 103 }, { x: 70, y: 103 }, { x: 179, y: 103 }, { x: 214, y: 103 }, { x: 254, y: 104 }, { x: 78, y: 121 }, { x: 112, y: 121 }, { x: 145, y: 121 }, { x: 180, y: 121 }, { x: 44, y: 122 }, { x: 214, y: 122 }, { x: 250, y: 124 }, { x: 128, y: 140 }, { x: 168, y: 140 }, { x: 56, y: 141 }, { x: 89, y: 141 }, { x: 209, y: 141 }, { x: 244, y: 141 }, { x: 147, y: 158 }, { x: 192, y: 158 }, { x: 231, y: 158 }, { x: 66, y: 159 }, { x: 109, y: 159 }, { x: 115, y: 175 }, { x: 147, y: 175 }, { x: 180, y: 175 }, { x: 215, y: 176 }, { x: 81, y: 177 }, { x: 114, y: 194 }, { x: 147, y: 194 }, { x: 180, y: 195 }, { x: 147, y: 212 } ]
   // const sortedSeed = timeSeed.sort((a, b) => a.x - b.x).sort((a, b) => a.y - b.y)
-  console.log(timeSeed)
   // new Array(60).fill('').map(() => {
   //   return { x: randomNo(20, 270), y: randomNo(20, 120) } 
   // })
