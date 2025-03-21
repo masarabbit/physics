@@ -214,13 +214,13 @@ function init() {
     constructor(props) {
       super({
         wrapper: Object.assign(document.createElement('div'), { 
-          innerHTML: '<div class="box">future</div>'
+          innerHTML: '<div class="box"></div>'
         }),
         pos: new Vector({ x: props.x, y: props.y }),
         velocity: new Vector({ x: 0, y: 0.1 }),
         acceleration: new Vector({ x: 0, y: settings.gravity }),
         w: 30,
-        h: 15,
+        h: 16,
         radius: 10,
         isAtBottom: false,
         isFaded: false,
@@ -343,11 +343,11 @@ function init() {
       }
       this.setStyles()
 
-      this.el.innerHTML = this.pos.y < 210
-        ? 'future'
+      this.el.className = this.pos.y < 210
+        ? 'box future'
         : Math.abs(this.pos.y - 190) < 40
-        ? 'now'
-        : 'past' 
+        ? 'box now'
+        : 'box past' 
 
       if (this.pos.y > 430 && !this.isAtBottom) {
         this.isAtBottom = true
