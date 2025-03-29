@@ -1,8 +1,14 @@
 
 function init() { 
 
+  const backgroundImages = {
+    future: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAQCAYAAAABOs/SAAAAAXNSR0IArs4c6QAAAHxJREFUSEvlVEEKwDAIa/7/aIcDRxE17rB20J5aFGOiKcamg02443BgERGVHkCqhOZU8e7oHoBuwW4ea+B/wDMzu9sojI1KHuVp3I/Nv2/GbwvOM84aZDmp1BUTVtTvQURsGbB3wnJgU6Pc6szXbHEiy4XLxTz3Rfy8v/oCexTYEcTeEjAAAAAASUVORK5CYII=',
+    now: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAQCAYAAAABOs/SAAAAAXNSR0IArs4c6QAAAH5JREFUSEvllUsOwCAIBeX+h8awoHlFsGhSXOhOAgxfpXbo0CFuuxjMzExEQwU8uciwRdYu4+sBZZQFFgWC8IyvF1gcz6KPHNqAlsECtUZ43wFH9m6pI+XfwVi60ox1YnV6te8lGSP8a2Kzc4F6y+ukbZjtsadjN+biJ7P6l+ryRuwRlNfZlgAAAABJRU5ErkJggg==',
+    past: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAQCAYAAAABOs/SAAAAAXNSR0IArs4c6QAAAIRJREFUSEvtlEEOwCAIBOX/j8ZwIEEKdIkmHlpvypqFAaVxadEl3/EbHyXPzExEIdXHoYjVPbuEZgcbe6HdVwllsW3jt4QsGdXaZISQp7egrgwsXk8ia0mrYmvgK0FiUfXRTJQV6wWUhOhRGtvGnf4vxLLeeTx+crsTXw4X+j5P6L73V08enaAR6ux4iQAAAABJRU5ErkJggg=='
+  }
+
   const px = num => `${num}px`
-  const randomNo = (min, max) => min + (Math.floor(Math.random() * (max - min)))
+  // const randomNo = (min, max) => min + (Math.floor(Math.random() * (max - min)))
 
   // const degToRad = deg => deg / (180 / Math.PI)
   // const radToDeg = rad => Math.round(rad * (180 / Math.PI))
@@ -342,12 +348,14 @@ function init() {
         this.reset()
       }
       this.setStyles()
-
-      this.el.className = this.pos.y < 210
-        ? 'box future'
+      
+      this.el.style.backgroundImage = `url(${backgroundImages[
+        this.pos.y < 210
+        ? 'future'
         : Math.abs(this.pos.y - 190) < 40
-        ? 'box now'
-        : 'box past' 
+        ? 'now'
+        : 'past' 
+      ]})`
 
       if (this.pos.y > 430 && !this.isAtBottom) {
         this.isAtBottom = true
