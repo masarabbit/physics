@@ -12,8 +12,6 @@ function init() {
   const settings = {
     friction: 0.3,
     bounce: 0.2,
-    shapes: [],
-    interval: null,
     gravity: 3,
     lines: [],
     objects: []
