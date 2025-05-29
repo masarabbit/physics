@@ -6,9 +6,9 @@ function init() {
     now: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAQCAYAAAABOs/SAAAAAXNSR0IArs4c6QAAAH5JREFUSEvllUsOwCAIBeX+h8awoHlFsGhSXOhOAgxfpXbo0CFuuxjMzExEQwU8uciwRdYu4+sBZZQFFgWC8IyvF1gcz6KPHNqAlsECtUZ43wFH9m6pI+XfwVi60ox1YnV6te8lGSP8a2Kzc4F6y+ukbZjtsadjN+biJ7P6l+ryRuwRlNfZlgAAAABJRU5ErkJggg==',
     past: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAQCAYAAAABOs/SAAAAAXNSR0IArs4c6QAAAIRJREFUSEvtlEEOwCAIBOX/j8ZwIEEKdIkmHlpvypqFAaVxadEl3/EbHyXPzExEIdXHoYjVPbuEZgcbe6HdVwllsW3jt4QsGdXaZISQp7egrgwsXk8ia0mrYmvgK0FiUfXRTJQV6wWUhOhRGtvGnf4vxLLeeTx+crsTXw4X+j5P6L73V08enaAR6ux4iQAAAABJRU5ErkJggg=='
   }
-
+  
   const px = num => `${num}px`
-
+  
   const settings = {
     friction: 0.3,
     bounce: 0.2,
@@ -16,14 +16,14 @@ function init() {
     lines: [],
     objects: []
   }
-
+  
   const elements = {
     wrapper: document.querySelector('.wrapper'),
     svg: document.querySelector('svg'),
     indicator: document.querySelector('.indicator'),
     testBtn: document.querySelector('.test-btn'),
   }
-
+  
   class Vector {
     constructor(props) {
       Object.assign(this, {
@@ -31,9 +31,6 @@ function init() {
         y: 0,
         ...props,
       })
-    }
-    get magnitude() {
-      return Math.sqrt(this.x * this.x + this.y * this.y)
     }
     setXy(xy) {
       this.x = xy.x
@@ -43,21 +40,16 @@ function init() {
       this.x += xy.x
       this.y += xy.y
     }
-    subtractXy(xy) {
-      this.x -= xy.x
-      this.y -= xy.y
-    }
     multiplyXy(n) {
       this.x *= n
       this.y *= n
     }
   }
-
+  
   class WorldObject {
     constructor(props) {
       Object.assign(this, {
         w: 0, h: 0, pos: { x: 0, y: 0 },
-        grabPos: { a: { x: 0, y: 0 }, b: { x: 0, y: 0 } },
         id: settings.objects.length,
         ...props,
       })
@@ -84,7 +76,7 @@ function init() {
       return Math.sqrt(Math.pow((this.pos.x - target.x), 2) + Math.pow((this.pos.y - target.y), 2))
     }
   }
-
+  
   class Line {
     constructor(props) {
       Object.assign(this, {
@@ -122,7 +114,7 @@ function init() {
       })
     }
   }
-
+  
   class GravityObject extends WorldObject {
     constructor(props) {
       super({
@@ -182,7 +174,7 @@ function init() {
       }
       // Distance from object to closest point
       const fullDistance = this.distanceBetween(closestXy)
-
+  
       if (fullDistance < this.radius) {
         const overlap = this.radius - fullDistance
         // Normalize the vector
@@ -238,7 +230,6 @@ function init() {
       this.el.classList.add('d-none')
       this.isFaded = true
       this.fadeIn()
-      console.log('check')
     }
     animateObject() {
       this.spaceOutObjects()
@@ -247,7 +238,7 @@ function init() {
       this.accelerate()
       this.velocity.multiplyXy(settings.friction)
       this.pos.addXy(this.velocity)
-
+  
       if (!this.pos.x || !this.pos.y) {
         this.reset()
       }
@@ -260,21 +251,20 @@ function init() {
         ? 'now'
         : 'past' 
       ]})`
-
+  
       if (this.pos.y > 430 && !this.isAtBottom) {
         this.isAtBottom = true
         setTimeout(()=> {
           this.fadeAndFadeIn()
         }, 1500)
       }
-      requestAnimationFrame(()=> this.animateObject())
     }
   }
-
+  
   const timeSeed = [ { x: 93, y: 30 }, { x: 201, y: 30 }, { x: 129, y: 31 }, { x: 166, y: 31 }, { x: 176, y: 47 }, { x: 211, y: 47 }, { x: 73, y: 48 }, { x: 142, y: 48 }, { x: 39, y: 49 }, { x: 108, y: 49 }, { x: 245, y: 49 }, { x: 169, y: 64 }, { x: 133, y: 65 }, { x: 236, y: 65 }, { x: 32, y: 66 }, { x: 67, y: 66 }, { x: 99, y: 66 }, { x: 204, y: 66 }, { x: 268, y: 66 }, { x: 32, y: 84 }, { x: 70, y: 84 }, { x: 104, y: 84 }, { x: 144, y: 84 }, { x: 181, y: 84 }, { x: 223, y: 85 }, { x: 259, y: 85 }, { x: 105, y: 102 }, { x: 141, y: 102 }, { x: 35, y: 103 }, { x: 70, y: 103 }, { x: 179, y: 103 }, { x: 214, y: 103 }, { x: 254, y: 104 }, { x: 78, y: 121 }, { x: 112, y: 121 }, { x: 145, y: 121 }, { x: 180, y: 121 }, { x: 44, y: 122 }, { x: 214, y: 122 }, { x: 250, y: 124 }, { x: 128, y: 140 }, { x: 168, y: 140 }, { x: 56, y: 141 }, { x: 89, y: 141 }, { x: 209, y: 141 }, { x: 244, y: 141 }, { x: 147, y: 158 }, { x: 192, y: 158 }, { x: 231, y: 158 }, { x: 66, y: 159 }, { x: 109, y: 159 }, { x: 115, y: 175 }, { x: 147, y: 175 }, { x: 180, y: 175 }, { x: 215, y: 176 }, { x: 81, y: 177 }, { x: 114, y: 194 }, { x: 147, y: 194 }, { x: 180, y: 195 }, { x: 147, y: 212 } ]
-
+  
   timeSeed.forEach(b => settings.objects.push(new GravityObject(b))) 
-
+  
   ;[
     {
       start: { x: 0, y: 0 },
@@ -328,8 +318,11 @@ function init() {
       end: { x: 300, y: 440 }
     },
   ].forEach(l => settings.lines.push(new Line(l)))
-  
-  settings.objects.forEach(o => requestAnimationFrame(()=> o.animateObject()))
+
+
+  setInterval(()=> {
+    settings.objects.forEach(o => o.animateObject())
+  }, 17)
 }
   
 window.addEventListener('DOMContentLoaded', init)
