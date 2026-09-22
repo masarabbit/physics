@@ -1,8 +1,5 @@
 
 window.addEventListener('DOMContentLoaded', ()=>{
-
-  const px = n => (!isNaN(n) ? n + 'px' : 0)
-
   class Vector {
     constructor({ x, y }) {
       Object.assign(this, { x, y })
@@ -46,12 +43,12 @@ window.addEventListener('DOMContentLoaded', ()=>{
           '</div>'
       })
       this.pos = new Vector({ x: pos.x, y: pos.y }),
-      this.prevPos = { x: 0, y: 0 }
+      this.prevPos = { x: null, y: null }
       this.velocity = new Vector({ x: 0, y: 0.1 }),
       this.acceleration = new Vector({ x: 0, y: settings.gravity }),
       this.deg = Math.random() * 360
-      this.lastPos = { x: null, y: null }
       settings.capsules.push(this)
+      this.setPos()
       machineTop.el.appendChild(this.el)
     }
     getNewPosBasedOnTarget = ({ el, distance: d, fullDistance }) => {
@@ -73,11 +70,10 @@ window.addEventListener('DOMContentLoaded', ()=>{
     }
     setPos() {
       const { x, y } = this.pos
-      if (this.lastPos.x === x && this.lastPos.y === y) return
-      this.lastPos = { x, y }
-      this.el.style.transform = `translate(${px(this.pos.x)}, ${px(
-        this.pos.y,
-      )}) rotate(${this.deg || 0}deg`
+      if (this.prevPos.x === x && this.prevPos.y === y) return
+      this.prevPos = { x, y }
+      this.el.style.transform = 
+        `translate(${this.pos.x}px, ${this.pos.y}px) rotate(${this.deg || 0}deg`
     }
     hitCheckWalls() {
       const buffer = 8
