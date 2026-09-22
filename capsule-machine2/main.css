@@ -1,0 +1,94 @@
+
+*,
+::before,
+::after {
+  box-sizing: border-box;
+  user-select: none;
+}
+
+body {
+  padding: 0;
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  background-color: #93eba0;
+}
+
+.wrapper {
+  position: absolute;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+.machine {
+  position: absolute;
+  box-shadow: 0 0 0 1px hotpink;
+  width: 330px;
+  height: 500px;
+}
+
+.top {
+  position: absolute;
+  width: 100%;
+  height: 300px;
+  top: 0;
+  box-shadow: 0 0 0 1px blue;
+}
+
+.bottom {
+  position: absolute;
+  width: 100%;
+  height: 200px;
+  bottom: 0;
+  box-shadow: 0 0 0 1px red;
+}
+
+.capsule-wrapper {
+  position: absolute;
+  width: 0;
+  height: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: 0.2s;
+}
+
+.capsule {
+  position: absolute;
+  border-radius: 50%;
+  overflow: hidden;
+  --size: 32px;
+  --m: 2;
+  width: calc(var(--m) * var(--size));
+  height: calc(var(--m) * var(--size));
+
+}
+
+.lid {
+  height: var(--size);
+  background-color: white;
+}
+
+.base {
+ height: var(--size);
+background-color: hotpink;
+}
+
+.sign {
+  position: absolute;
+  color: #a4865b;
+  bottom: 10px;
+  right: 10px;
+  font-size: 10px;
+}
+
+a {
+  color: #a4865b;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
