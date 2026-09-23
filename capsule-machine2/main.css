@@ -35,6 +35,7 @@ body {
   height: 300px;
   top: 0;
   box-shadow: 0 0 0 1px blue;
+  overflow: hidden;
 }
 
 .bottom {
@@ -53,16 +54,17 @@ body {
   justify-content: center;
   align-items: center;
   transition: 0.2s;
+  --size: 32px;
+  --m: 2;
+  --height: calc(var(--m) * var(--size));
 }
 
 .capsule {
   position: absolute;
   border-radius: 50%;
   overflow: hidden;
-  --size: 32px;
-  --m: 2;
   width: calc(var(--m) * var(--size));
-  height: calc(var(--m) * var(--size));
+  height: var(--height);
 
 }
 
@@ -73,8 +75,99 @@ body {
 
 .base {
  height: var(--size);
-background-color: hotpink;
+ background-color: hotpink;
 }
+.squirrel-wrapper {
+  position: absolute;
+  --m: 2;
+  --w: 27px;
+  --h: 35px;
+  display: flex;
+  justify-content: center;
+  width: 0;
+  height: 0;
+  transition: 2s;
+}
+
+.squirrel {
+  position: absolute;
+  --width: calc(var(--m) *var(--w));
+  --height: calc(var(--m) *var(--h));
+  --frame-no: 1;
+  width: var(--width);
+  height: var(--height);
+  bottom: 0;
+  image-rendering: pixelated;
+  background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABsAAAAjCAYAAABl/XGVAAAByUlEQVR4AeyUS04EMQxEu1mz46IchYuyYz/4WXaUZBzHPWqxAqXGjj9VcTri7fjDv0zskZwjyy3bVmKPr+8fmiLSLEfPEpGYkx2BYJZbingiEvPc7fZf7JYrja7x/Px4b+TdI2mPg6TVnPhVzGI89YEUIgQBvsP2Wu+xne3FVMRIdn2apxbIBlEx+erF8sobsi6mU73KV53OxQYd+/hDbN5UauaeUGwuurjn+/Vo7aGYXUsrYgrQAuLMNRJi6ecg55AgwmKOIxTTjPwgALwRH0gqXNTNCYupYCpGIXACfOD7q9bFhv8aV0mYtnIIF4NfBWlkUwG1oFJLTS/G/pSfJgpRBmoNYuJFv2TgXT8QrmUHIdEPL7a05slo0ueLswOHkZpyfSQm/etl17IuSDKzWHpKhGyaRsmeeAskTi82CM0E7CF2LvbuV20v1nog6olbwpxd3soO6sTXlyh2eI3tyUdCxGgG+DRfxTzZmRGRAxURDiV1bSrxh8nY++jqV34grR5gnmzJD+kyOSWsdpiKkkhMvx1Jhzeb9bDfgtaTc0jBk5DEnq+R4AuAvEdIEU1G4XBaCUAk5ljFyW2xEqMRAQd7h8ewHivZXwAAAP//WSXBXwAAAAZJREFUAwDU0dFH44Q6ygAAAABJRU5ErkJggg==);
+  background-size: calc(var(--width) * var(--frame-no)) var(--height);
+  box-shadow: 0 0 0 1px hotpink;
+}
+
+@keyframes frame-animation {
+  0% {
+    background-position: 0px 0px;
+  }
+  100% {
+    background-position: calc(-1 * var(--width) * var(--frame-no)) 0px;
+  }
+}
+
+@keyframes appear {
+  0% {
+    transform: translateY(var(--height));
+  }
+  100% {
+    transform: translate(0);
+  }
+}
+
+@keyframes hide {
+  0% {
+    transform: translate(0);
+  }
+  100% {
+    transform: translateY(var(--height));
+  }
+}
+
+@keyframes hide-capsule {
+  0% {
+    top: 0;
+  }
+  100% {
+    top: var(--height);
+  }
+}
+
+
+[pose='jump-up'] .squirrel {
+  --frame-no: 3;
+  background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFEAAAAjCAYAAADsZeb8AAADxElEQVR4AeyXzX4TMQzEU87ceFEehRflxr3M3/Usjlf22vuRFAI/TyRLI8me3dD2y+3/v8MK9ER873Tv5Tpl/2aqJeL7j5+/uHEkVi9HzcshEtEi3QIhe7kj4kUPy/16OXOeaiMRH30gP5hIrF7u0edsznu2iBbpr37rny1i8+lelPBDO/WtfyURLeDpb30k4tv3b1+XF6H44bIcgmTmvOG/OmoRec3vxEIghAT4Rt4nvmOvaksRk3hZnCE94AKREVNmej3lrc/fIg7LucGtiBGfQiniVOEJZA6fHlzZi4cC6pj2iS+7Z93NoX8ENyYnn3ky28si3g3ZLrtnzA5VdZqX67TdXnCBmPXlFOquNAvGyNtmzswsi8iMBW60BAJnhBOUnR1C0BrDM7gDGC5oEEMRG9zR8NalljdjtGHJ8xsim/rIpl9ZbMVlvkxaiZM8fcCRSf//IR57gA/IsceC7Jf9CK8QipiLFzIDwBKQU3MUYqVDkzMU7B6i7iv+ao1wXMRc+d2ZcIB4aeGDtNnxEYroPhweMADgA+drC6cR86WSyDVnds+c3jncz7wRrmtsqQH0UIzzl1Doz+qKSANgOj7w/gxb9+PgoOxdc8pcz6cPtQC/xy1zcKkBpc8eiIugMh9rERHyR2j+80itp9EDcEiAD5w/at1zqw8z4fZ4Ob8IiYjpK0aCBr3iKEcNtQA/4hSx9Mt1xKMemIsPvLelFkQ5OORkH/rnKCJq5sfiYPkQKYAfISX1QY4auc0FR0lf6pEPTGPvl8/KmSLANgd/FHciUkQTBthnX4McHOL4e0AtPVyLH6HMU+P9oE1vfs2lT4Sax3ng1fF6j4irQSOFNWd0YHkAelBHDD8COTjk8Hdgdb8dPe5KOI8C/nbdEFH726FBNB285GrOSF3NmZjH3S6HRWTQ6oIEL8ChOZ9NQPQpRWS/A7tKDgm5a+KFRZeKyFujsy//d8i/dD1iXjTjUhEvVewTNa9FPO1rFj2x6t6nzaLvxrzpWfSLfqBp1uqbVYsoztyKhs11GGe3ZhFXl9XlFCvXsJD0qwUsG9X+sIg0rotb+8zdulSrfCp+dFauX82s43kf3ikScfXE3CDbZWDeJz6+IUI4TPGhRZ8WkVwJ8WZmpbOqprnorSQ9E5c9yDGZ9YpEXLO2I2moaLZyh1Y6aMn0gbNdUnnv/qVdOBc4Q3NaIqbLcXCgw9FM5uMvG2JAAcfl7l6PnMUhV/O4iyHC9J1aIqrXjWYGe8MxrGNHLb2Mspdj2DJ+1KefQS/7WPZT+A0AAP//d3NmRQAAAAZJREFUAwDMkyZli6oqigAAAABJRU5ErkJggg==);
+  animation: frame-animation forwards 0.5s steps(var(--frame-no)), appear forwards 0.5s;
+}
+
+[pose='walk'] .squirrel {
+  --frame-no: 2;
+  background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADYAAAAjCAYAAADfXvn1AAAC7ElEQVR4AeyXS3LcMAxENVlnl4vmKLlodtk7/TAATVL8jpRv2UUMCaDRQFMeufzp+E9/RsLeBppHuUHZ70v1hL19+/6DKVoCRjlqXrFWn+AZ5QJz2lvCYvCjIW6UO5EvBoKzJWCUG9K3hA0Lbk7G4Ldf4p8WdvM9vdN9CHu/i3/j1Hpij69fPqfpsxdI+j6QdMyD899otTDeTIUAhkYcxjnMfcNH7IX9l11iLswE+cBLM4LFBEagtq1FjfXMq+DD6ph8w2tfWrmwpYKbQCaoFjDiBosJg0Bt4xXCrNEY2s/uNOyz3JsJYQWrvxiKWO2sYOoa9++8RJ5ebt7iOJrCUva1Q94ozl2mlQvqYOyC+G0JUxP6aesIA2hZ/4AYc9e2GmPB4zg1c1xq6LjLm/MWPB6zXsMnhhiMAowzVrBlDpjMTUePW8MU9IPn3DsO+LEU0KHGKDRdQ2EQYsHCGQv/zh0xGPwYZ+zVHiGs+EO5S3ZlgOiFGKznR7zYB04IA2LidoYEi6n4IVtd1mcVXOPol19Anicn32bJhSl2ELTGgGamAsNrt5eG9uaCRwmw2mylHuYtfjjPEroWRpENya3MTODmC0HxlYXQJJChZyZSarTNVy3MRM3LngiE67RVI3y+rBaeFVOh4bVPVy1sWBA3OgRVSWoUWr5pYW9ZubDhbTBg3GremRi5PLZ4LvqtcOz0yoXZPCsNAK7iwK7Y6tCruJOw3hBBiCAMv4eNODide7+G9uJQfmk5Vxfr+dQrFzZthJiwbofNBAOFwb1Z3oXnwgAlxThXjGFVP+VDTJjw3QUGToxzDiQmv+hVC1N+b0FaN9pj2EPXvegvhkKU/PX/x5yAmqk59tRsWugAr3ev3MjlpmyzT+uJnb5rEEHgu47P5b7hOYcp22ymeL2sNg/CIb8bJ1eZ3PNqCQNlxDTBFJgNSj43lVxeuzMUDXvCALUGvdQM0oaNOFszNCjOoZGwM/oZebnZs7z5eTvnTwAAAP//4f1PtAAAAAZJREFUAwBnepNWkZFkSgAAAABJRU5ErkJggg==);
+  animation: frame-animation infinite 0.5s steps(var(--frame-no));
+}
+
+[pose='grab'] .squirrel {
+  --frame-no: 1;
+  background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABsAAAAjCAYAAABl/XGVAAABmUlEQVR4AeyWS1bEIBBFiWNnbtSluFFnzltupR6HkGpCGqMO2uPrgvrdVMDPS/rFr38Bu3UG7sU6ZSlFk90+Pr8oipr2YtR01cLULAXAXqwLUbCFyX+JfcJ+5LW2r3F5f3stjatLUi4HQc9ZWJ9RDeOqb5rSCCBiLfne8uUbsYIZxJuM1NmPhucDHaoRbCh5NgmYTfVoozPTATOOH7qto4+juNfwSmu5ezUFtm6nPu0NMamUuwHOZv0uMBJWV0pMgbTH1nH2raK4+wqwwFQMhCTEGik2a3cwIGrKGmk/a4Gd/k0gKFOj0QcCVs6IQjU6sp7bfdA2B9jmFpHQKgL7NOXwo5zWB2zjo0mrTUK1Ia/aHi53sMOKiQRg9meFV/dIH6YbrQUGY1HRaCFFZyUYN9JuFtCzTaJ8f2jrqXiByXGl/VOYXZarphuezM9g9xz423PGlxM355X34f/6+IekptnaG8mWi0btDoQzmswKCUo0yeudP/vqbwBS7S/rCEbQGgNB2UGTbNI9P7FD3YNRCEBiL8mHlW/IfgMAAP///i1jPAAAAAZJREFUAwAya6dHoTyBmAAAAABJRU5ErkJggg==);
+  animation: hide forwards 0.5s;
+  animation-delay: 0.5s;
+  /* animation: frame-animation-2 forwards 0.5s steps(var(--frame-no)); */
+}
+
+.disappear {
+  animation: hide-capsule forwards 0.5s;
+}
+
+/* [pose='none'] .squirrel {
+  animation: none;
+} */
+
 
 .sign {
   position: absolute;

@@ -33,6 +33,39 @@ window.addEventListener('DOMContentLoaded', ()=>{
     radius: 36,
   }
 
+  class Squirrel {
+    constructor(){
+      this.el = Object.assign(document.createElement('div'), {
+        className: 'squirrel-wrapper',
+        innerHTML: 
+          '<div class="squirrel"></div>'
+      })
+      machineTop.el.appendChild(this.el)
+      this.popUp({ x: width / 2, y: height })
+    }
+    popUp(pos) {
+      this.el.setAttribute('pose', 'jump-up')
+      this.setPos(pos)
+      setTimeout(()=> {
+        this.el.setAttribute('pose', 'walk')
+         this.setPos({
+          x: pos.x - 40,
+          y: pos.y
+         })
+         setTimeout(()=> {
+            this.el.setAttribute('pose', 'grab')
+            setTimeout(()=> {
+              settings.capsules[16].remove()
+            }, 500)
+         }, 2000)
+      }, 650)
+    }
+    setPos({x, y}) {
+      this.el.style.transform = 
+        `translate(${x}px, ${y}px)`
+    } 
+  }
+
   class Capsule {
     constructor({ pos = { x: 0, y: 0 }}) {
       this.el = Object.assign(document.createElement('div'), {
@@ -131,6 +164,14 @@ window.addEventListener('DOMContentLoaded', ()=>{
   
       this.setPos()
     }
+    remove() {
+      this.el.classList.add('disappear')
+      setTimeout(()=> {
+        this.el.remove()
+        settings.capsules = settings.capsules.filter(c => c !== this) 
+      }, 500)
+  
+    }
   }
 
 
@@ -140,6 +181,8 @@ window.addEventListener('DOMContentLoaded', ()=>{
   setInterval(() => {
     settings.capsules.forEach(c => c.move())
   }, 100)
+
+  settings.squirrel = new Squirrel()
 
   window.addEventListener('keyup', e => {
     if (e.key === 'Enter') console.log(settings)
