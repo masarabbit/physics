@@ -166,9 +166,9 @@ window.addEventListener('DOMContentLoaded', ()=>{
     }
     remove() {
       this.el.classList.add('disappear')
+      settings.capsules = settings.capsules.filter(c => c !== this) 
       setTimeout(()=> {
         this.el.remove()
-        settings.capsules = settings.capsules.filter(c => c !== this) 
       }, 500)
   
     }
