@@ -25,6 +25,12 @@ window.addEventListener('DOMContentLoaded', ()=>{
   const {width, height} = machineTop.el.getBoundingClientRect()
   machineTop.size = { w: width, h: height }
 
+   const machineBottom = {
+    el: document.querySelector('.bottom'),
+  }
+  const {width: bottomWidth, height: bottomHeight } = machineBottom.el.getBoundingClientRect()
+  machineBottom.size = { w: bottomWidth, h: bottomHeight }
+
   const settings = {
     capsules: [],
     friction: 0.9,
@@ -58,6 +64,27 @@ window.addEventListener('DOMContentLoaded', ()=>{
             this.el.setAttribute('pose', 'grab')
             setTimeout(()=> {
               capsule.remove()
+              
+              setTimeout(()=> {
+                capsule.setPos({ x: -52, y: -30 })
+                this.el.appendChild(capsule.el)
+                capsule.el.classList.remove('disappear')
+           
+                this.setPos({ x: machineBottom.size.w + 200, y: machineBottom.size.h - 40 })
+                this.el.setAttribute('pose', 'roll')
+                machineBottom.el.appendChild(this.el)
+
+                setTimeout(()=> {
+                       capsule.deg -= 360
+                       capsule.setPos()
+                       this.setPos({ x: 120, y: machineBottom.size.h - 40 })
+                       setTimeout(()=> {
+                          this.el.setAttribute('pose', 'neutral')
+                       }, 2000)
+                }, 500)
+              }, 800)
+            
+
             }, 500)
          }, capsule.distanceBetween({ x: this.pos.x + 20, y: this.pos.y}) * 30)
       }, 650)
@@ -104,12 +131,11 @@ window.addEventListener('DOMContentLoaded', ()=>{
     accelerate() {
       this.velocity.addXy(this.acceleration)
     }
-    setPos() {
+    setPos(pos) {
+      if (pos) this.pos = pos
       const { x, y } = this.pos
-      if (this.prevPos.x === x && this.prevPos.y === y) return
-      this.prevPos = { x, y }
       this.el.style.transform = 
-        `translate(${this.pos.x}px, ${this.pos.y}px) rotate(${this.deg || 0}deg`
+        `translate(${x}px, ${y}px) rotate(${this.deg || 0}deg`
     }
     hitCheckWalls() {
       const buffer = 8
@@ -171,7 +197,8 @@ window.addEventListener('DOMContentLoaded', ()=>{
       this.el.classList.add('disappear')
       settings.capsules = settings.capsules.filter(c => c !== this) 
       setTimeout(()=> {
-        this.el.remove()
+        // this.el.remove()
+        settings.selectedCapsule = this
       }, 500)
   
     }
