@@ -46,23 +46,26 @@ window.addEventListener('DOMContentLoaded', ()=>{
     popUp(pos) {
       this.el.setAttribute('pose', 'jump-up')
       this.setPos(pos)
+      const capsule = settings.capsules[15]
       setTimeout(()=> {
+        // TODO also test separate walk / run motion
         this.el.setAttribute('pose', 'walk')
          this.setPos({
-          x: pos.x - 40,
+          x: capsule.pos.x + 20,
           y: pos.y
          })
          setTimeout(()=> {
             this.el.setAttribute('pose', 'grab')
             setTimeout(()=> {
-              settings.capsules[16].remove()
+              capsule.remove()
             }, 500)
-         }, 2000)
+         }, capsule.distanceBetween({ x: this.pos.x + 20, y: this.pos.y}) * 30)
       }, 650)
     }
-    setPos({x, y}) {
+    setPos(pos) {
+      this.pos = pos
       this.el.style.transform = 
-        `translate(${x}px, ${y}px)`
+        `translate(${pos.x}px, ${pos.y}px)`
     } 
   }
 
