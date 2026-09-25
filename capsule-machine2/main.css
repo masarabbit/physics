@@ -66,12 +66,10 @@ body {
   --size: 16px;
   --m: 4;
   --height: calc(var(--m) * var(--size));
+  cursor: pointer;
 }
 
-
-
 .squirrel-wrapper[pose='roll'] .capsule-wrapper {
-  /* animation: forwards roll 2s; */
   transition: 2s;
 }
 
@@ -325,7 +323,6 @@ body {
 
 
 .toy {
-  position: absolute;
   --size: 16px;
   --m: 2;
   width: calc(var(--size) * var(--m));
@@ -408,17 +405,26 @@ body {
   overflow: visible;
 }
 
-.wrapper:has(.enlarge)::after {
+
+.wrapper::after {
   content: '';
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: #00000070;
+  background-color: transparent;
   z-index: 10;
-  animation: fade-in forwards 0.8s;
+  transition: 0.8s;
+  pointer-events: none;
 }
+
+.wrapper:has(.enlarge)::after {
+  background-color: #00000070;
+  pointer-events: none;
+}
+
+
 
 @keyframes fade-in {
   0% {
@@ -447,7 +453,7 @@ body {
 }
 
 .capsule-wrapper.enlarge .toy {
-  animation: enlarge forwards 1s;
+  animation: enlarge forwards 2s;
   animation-delay: 0.8s;
 }
 
@@ -455,17 +461,37 @@ body {
   0% {
     transform: scale(1);
   }
+  50% {
+    transform: scale(2) translateY(0);
+  }
   100% {
-    transform: scale(2);
+    transform: scale(2) translateY(-100vh);
   }
 }
 
-.wrapper > .toy {
+.collection-box .toy {
+  animation: collect forwards 1s;
+}
+
+@keyframes collect {
+  0% {
+    transform: translateY(-100vh);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+.collection-box {
   position: absolute;
-  z-index: 11;
-  --m: 6;
-  top:  calc(var(--size) * -3);
-  left:  calc(var(--size) * -3);
+  top: 0px;
+  width: 400px;
+  box-shadow: 0 0 0 1px red;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: start;
+  padding:  4px;
+  gap: 4px;
 }
 
 a {
@@ -476,3 +502,12 @@ a {
 a:hover {
   text-decoration: underline;
 }
+
+/* Pink
+#ff4187
+
+Red
+#ff3636
+
+Blue
+#2cbee2 */

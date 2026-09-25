@@ -18,20 +18,8 @@ window.addEventListener('DOMContentLoaded', ()=>{
     }
   }
 
-  // const degToRad = deg => deg / (180 / Math.PI)
   const radToDeg = rad => Math.round(rad * (180 / Math.PI))
   const randomN = max => Math.ceil(Math.random() * max)
-
-  // const rotatePoint = ({ angle, axis, point }) =>{
-  //   const a = degToRad(angle)
-  //   const aX = point.x - axis.x
-  //   const aY = point.y - axis.y
-  //   return {
-  //     x: (aX * Math.cos(a)) - (aY * Math.sin(a)) + axis.x,
-  //     y: (aX * Math.sin(a)) + (aY * Math.cos(a)) + axis.y,
-  //   }
-  // }
-
   const angleTo = ({ a, b }) => Math.atan2(b.y - a.y, b.x - a.x)
   const nearest360 = n => n === 0 ? 0 : (n - 1) + Math.abs(((n - 1) % 360) - 360)
 
@@ -39,9 +27,8 @@ window.addEventListener('DOMContentLoaded', ()=>{
     el.style.transform = `rotate(${deg || 0}deg)`
   }
 
-
-  const wrappers = document.querySelectorAll('.wrapper')
-
+  const wrapper = document.querySelector('.wrapper')
+  const collectionBox = document.querySelector('.collection-box')
   const machineHandle = document.querySelector('.handle')
   const machineCircle = document.querySelector('.circle')
 
@@ -57,8 +44,7 @@ window.addEventListener('DOMContentLoaded', ()=>{
   const {width: bottomWidth, height: bottomHeight } = machineBottom.el.getBoundingClientRect()
   machineBottom.size = { w: bottomWidth, h: bottomHeight }
 
-
-    const handleAxis = () => {
+  const handleAxis = () => {
     const { left: handleX, top: handleY } = machineCircle.getBoundingClientRect()
     const { top, left } = machineBottom.el.getBoundingClientRect()
     return {
@@ -104,7 +90,6 @@ window.addEventListener('DOMContentLoaded', ()=>{
       return settings.capsules.find(c => c.id === selectedId)
     }
     popUp() {
-      // TODO we should vary what the nearestCapsule becomes each time.
       const capsule = this.getNearestCapsule({ x: machineTop.size.w / 2, y: machineTop.size.h })
       const distance = capsule.distanceBetween({ x:  machineTop.size.w / 2 + 20, y: machineTop.size.h})
       const walkDelay = distance * 10
@@ -222,7 +207,7 @@ window.addEventListener('DOMContentLoaded', ()=>{
     collect() {
       this.el.classList.add('enlarge')
       this.deg = nearest360(this.deg)
-      const { width, height } = wrappers[0].getBoundingClientRect()
+      const { width, height } = wrapper.getBoundingClientRect()
       const { left, top } = machineBottom.el.getBoundingClientRect()
       this.setPos({
         x: width / 2 - left, y: height / 2 - top
@@ -232,9 +217,7 @@ window.addEventListener('DOMContentLoaded', ()=>{
         deg: 0
       })
       setTimeout(()=> {
-        // TODO need to add 'selected' animation
-        this.toy.style.transform = `translate(${width / 2}px, ${height / 2}px)`
-        wrappers[1].appendChild(this.toy)
+        collectionBox.appendChild(this.toy)
         this.el.remove()
         settings.isHandleLocked = false
       }, 3000)
@@ -326,7 +309,6 @@ window.addEventListener('DOMContentLoaded', ()=>{
       this.el.classList.add('disappear')
       settings.capsules = settings.capsules.filter(c => c !== this) 
       setTimeout(()=> {
-        // this.el.remove()
         settings.selectedCapsule = this
       }, 500)
   
