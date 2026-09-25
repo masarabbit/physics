@@ -20,6 +20,7 @@ window.addEventListener('DOMContentLoaded', ()=>{
 
   // const degToRad = deg => deg / (180 / Math.PI)
   const radToDeg = rad => Math.round(rad * (180 / Math.PI))
+  const randomN = max => Math.ceil(Math.random() * max)
 
   // const rotatePoint = ({ angle, axis, point }) =>{
   //   const a = degToRad(angle)
@@ -32,13 +33,14 @@ window.addEventListener('DOMContentLoaded', ()=>{
   // }
 
   const angleTo = ({ a, b }) => Math.atan2(b.y - a.y, b.x - a.x)
-  // const nearest360 = n => n === 0 ? 0 : (n - 1) + Math.abs(((n - 1) % 360) - 360)
+  const nearest360 = n => n === 0 ? 0 : (n - 1) + Math.abs(((n - 1) % 360) - 360)
 
   const setAngle = ({ el, deg }) =>{
     el.style.transform = `rotate(${deg || 0}deg)`
   }
 
 
+  const wrappers = document.querySelectorAll('.wrapper')
 
   const machineHandle = document.querySelector('.handle')
   const machineCircle = document.querySelector('.circle')
@@ -95,24 +97,20 @@ window.addEventListener('DOMContentLoaded', ()=>{
       this.setPos({ x: machineTop.size.w / 2, y: machineTop.size.h })
     }
     getNearestCapsule(pos) {
-      const { id } = settings.capsules.map(c => ({ dist: c.distanceBetween(pos), id: c.id })).sort((a, b) => a.dist - b.dist)[0]
-      return settings.capsules.find(c => c.id === id)
+      const filteredCapsules = settings.capsules.filter(c => c.pos.y > machineTop.size.h - 64)
+      .map(c => ({ dist: c.distanceBetween(pos), id: c.id }))
+      const selectedId = filteredCapsules[Math.floor(Math.random() * filteredCapsules.length)].id
+      // const selectedId = settings.capsules.map(c => ({ dist: c.distanceBetween(pos), id: c.id })).sort((a, b) => a.dist - b.dist)[0].id
+      return settings.capsules.find(c => c.id === selectedId)
     }
     popUp() {
       // TODO we should vary what the nearestCapsule becomes each time.
       const capsule = this.getNearestCapsule({ x: machineTop.size.w / 2, y: machineTop.size.h })
-
-      const config = capsule.pos.x >=  machineTop.size.w / 2
-        ? {
-          dir: 'right',
-          offset: -20
-        }
-        : {
-          dir: 'left',
-          offset: 20,
-        }
-      const distance = capsule.distanceBetween({ x:  machineTop.size.w / 2 + config.offset, y: machineTop.size.h})
+      const distance = capsule.distanceBetween({ x:  machineTop.size.w / 2 + 20, y: machineTop.size.h})
       const walkDelay = distance * 10
+
+      const dir = capsule.pos.x > machineTop.size.w / 2 ? 'right' : 'left'
+      const offset = (distance < 50 || dir === 'left') ? 20 : -20
 
       chainActions(this, [
         ...(this.hasReleasedCapsule ? [{
@@ -125,25 +123,28 @@ window.addEventListener('DOMContentLoaded', ()=>{
         }] : []),
         {
           action: a => {
-            a.setPos({ x: machineTop.size.w / 2, y: machineTop.size.h })
+            a.setPos({ x: machineTop.size.w / 2 + 20, y: machineTop.size.h })
             machineTop.el.appendChild(a.el)
             a.el.setAttribute('pose', 'jump-up')
           },
           delay: 650,
         },
-        ...(distance > 100 ? [{
+        ...(distance > 50 ? [{
           action: a => {
-            a.el.setAttribute('dir', config.dir)
+            a.el.setAttribute('dir',  dir)
             a.el.setAttribute('pose', 'walk')
             a.setPos({
-              x: capsule.pos.x + config.offset,
+              x: capsule.pos.x + offset,
               y: a.pos.y
             })
           },
           delay: walkDelay,
-        }] : []),
+        }]: []),
         {
-          action: a => a.el.setAttribute('pose', 'grab'),
+          action: a => {
+            a.el.setAttribute('dir',  capsule.pos.x > (capsule.pos.x + offset) ? 'right' : 'left')
+            a.el.setAttribute('pose', 'grab')
+          },
           delay: 500,
         },
         {
@@ -173,8 +174,6 @@ window.addEventListener('DOMContentLoaded', ()=>{
         {
           action: a => {
             a.el.setAttribute('pose', 'neutral')
-            // TODO we should perhaps keep this locked until the capsule is collected
-            settings.isHandleLocked = false
             capsule.setPos({ x: 48, y: machineBottom.size.h - 50 })
             machineBottom.el.appendChild(capsule.el)
             a.hasReleasedCapsule = true
@@ -189,13 +188,18 @@ window.addEventListener('DOMContentLoaded', ()=>{
     } 
   }
 
+  const getRandomToy = () => {
+    return ['bunny', 'duck-yellow', 'duck-pink', 'star', 'water-melon', 'panda', 'dino', 'roboto-san', 'roboto-sama', 'penguin', 'turtle'][randomN(11) - 1]
+  }
+
   class Capsule {
     constructor({ pos = { x: 0, y: 0 }, id}) {
       this.el = Object.assign(document.createElement('div'), {
         className: 'capsule-wrapper',
         innerHTML: 
           '<div class="capsule">' +
-          '<div class="lid"></div><div class="base"></div>' +
+          `<div class="lid"></div><div class="base ${['red', 'pink', 'blue', 'white'][Math.floor(Math.random() * 4)]}"></div>` +
+          `<div class="toy ${getRandomToy()}"></div>` +
           '</div>'
       })
       this.pos = new Vector({ x: pos.x, y: pos.y })
@@ -207,6 +211,33 @@ window.addEventListener('DOMContentLoaded', ()=>{
       settings.capsules.push(this)
       this.setPos()
       machineTop.el.appendChild(this.el)
+      this.toy = this.el.querySelector('.toy')
+      this.toyDeg = randomN(180) - randomN(90)
+      setAngle({
+        el: this.toy,
+        deg: this.toyDeg
+      })
+      this.el.addEventListener('click', ()=> this.collect())
+    }
+    collect() {
+      this.el.classList.add('enlarge')
+      this.deg = nearest360(this.deg)
+      const { width, height } = wrappers[0].getBoundingClientRect()
+      const { left, top } = machineBottom.el.getBoundingClientRect()
+      this.setPos({
+        x: width / 2 - left, y: height / 2 - top
+      })
+      setAngle({
+        el: this.toy,
+        deg: 0
+      })
+      setTimeout(()=> {
+        // TODO need to add 'selected' animation
+        this.toy.style.transform = `translate(${width / 2}px, ${height / 2}px)`
+        wrappers[1].appendChild(this.toy)
+        this.el.remove()
+        settings.isHandleLocked = false
+      }, 3000)
     }
     getNewPosBasedOnTarget = ({ el, distance: d, fullDistance }) => {
       const remainingD = fullDistance - d
@@ -282,6 +313,10 @@ window.addEventListener('DOMContentLoaded', ()=>{
         if (Math.abs(this.prevPos.x - this.pos.x)) {
           // rotate capsule
           this.deg += (this.pos.x - this.prevPos.x) * 2
+          setAngle({
+            el: this.toy,
+            deg: this.toyDeg += (randomN(20) - randomN(10))
+          })
         }
       }
   

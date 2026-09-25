@@ -209,7 +209,6 @@ function init() {
 
   const shake = () => {
     capsuleData.forEach(c => {
-      c.velocity.setAngle(degToRad(randomN(270)))
       c.velocity.setXy({ x: 10, y: 10})        
       c.accelerate(c.acceleration)
     })
