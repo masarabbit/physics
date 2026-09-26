@@ -5,6 +5,8 @@ window.addEventListener('DOMContentLoaded', ()=>{
   //TODO mix up the capsules a bit more
   //TODO update the toys
   //TODO make the machine responsive?
+  // adjust sprite so squirrel feet is touching ground
+  // TODO update toys to be 36 * 36
   class Vector {
     constructor({ x, y }) {
       Object.assign(this, { x, y })
@@ -90,12 +92,21 @@ window.addEventListener('DOMContentLoaded', ()=>{
     getNearestCapsule(pos) {
       const filteredCapsules = settings.capsules.filter(c => c.pos.y > machineTop.size.h - 64)
       .map(c => ({ dist: c.distanceBetween(pos), id: c.id }))
-      const selectedId = filteredCapsules[Math.floor(Math.random() * filteredCapsules.length)].id
+      const selectedId = filteredCapsules[Math.floor(Math.random() * filteredCapsules.length)]?.id
       // const selectedId = settings.capsules.map(c => ({ dist: c.distanceBetween(pos), id: c.id })).sort((a, b) => a.dist - b.dist)[0].id
       return settings.capsules.find(c => c.id === selectedId)
     }
     popUp() {
       const capsule = this.getNearestCapsule({ x: machineTop.size.w / 2, y: machineTop.size.h })
+      if (!capsule) {
+        console.log('test')
+
+        // TODO trigger alternative animation when nothing is left to pick?
+        
+        settings.isHandleLocked = false
+        return
+      }
+
       const distance = capsule.distanceBetween({ x:  machineTop.size.w / 2 + 20, y: machineTop.size.h})
       const walkDelay = distance * 10
 
@@ -329,10 +340,6 @@ window.addEventListener('DOMContentLoaded', ()=>{
   }, 100)
 
   settings.squirrel = new Squirrel()
-
-  window.addEventListener('keyup', e => {
-    if (e.key === 'Enter') console.log(settings)
-  })
 
 
   const grabHandle = e => {

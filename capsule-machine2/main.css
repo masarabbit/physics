@@ -456,7 +456,7 @@ body {
 }
 
 .wrapper:has(.enlarge)::after {
-  background-color: #00000070;
+  background-color: #ffffff70;
   pointer-events: none;
 }
 
