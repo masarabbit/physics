@@ -5,7 +5,6 @@ window.addEventListener('DOMContentLoaded', ()=>{
   //TODO mix up the capsules a bit more
   //TODO update the toys
   //TODO make the machine responsive?
-  // adjust sprite so squirrel feet is touching ground
   // TODO update toys to be 36 * 36
   class Vector {
     constructor({ x, y }) {
