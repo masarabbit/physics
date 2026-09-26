@@ -1,5 +1,10 @@
 
 window.addEventListener('DOMContentLoaded', ()=>{
+
+  //TODO add something to prompt picking up
+  //TODO mix up the capsules a bit more
+  //TODO update the toys
+  //TODO make the machine responsive?
   class Vector {
     constructor({ x, y }) {
       Object.assign(this, { x, y })
@@ -102,7 +107,7 @@ window.addEventListener('DOMContentLoaded', ()=>{
           action: a => {
             a.el.setAttribute('dir', 'right')
             a.el.setAttribute('pose', 'walk')
-            a.setPos({ x: machineBottom.size.w + 200, y: machineBottom.size.h - 20 })
+            a.setPos({ x: machineBottom.size.w + 200, y: machineBottom.size.h })
           },
           delay: 2000,
         }] : []),
@@ -220,7 +225,7 @@ window.addEventListener('DOMContentLoaded', ()=>{
         collectionBox.appendChild(this.toy)
         this.el.remove()
         settings.isHandleLocked = false
-      }, 3000)
+      }, 2000)
     }
     getNewPosBasedOnTarget = ({ el, distance: d, fullDistance }) => {
       const remainingD = fullDistance - d
