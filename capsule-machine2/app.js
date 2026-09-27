@@ -1,11 +1,10 @@
 
 window.addEventListener('DOMContentLoaded', ()=>{
 
-  //TODO add something to prompt picking up
   //TODO mix up the capsules a bit more
   //TODO update the toys
+  // TODO maybe the squirrel jump sometimes
   //TODO make the machine responsive?
-  // TODO update toys to be 36 * 36
   class Vector {
     constructor({ x, y }) {
       Object.assign(this, { x, y })
@@ -99,7 +98,6 @@ window.addEventListener('DOMContentLoaded', ()=>{
       const capsule = this.getNearestCapsule({ x: machineTop.size.w / 2, y: machineTop.size.h })
       if (!capsule) {
         console.log('test')
-
         // TODO trigger alternative animation when nothing is left to pick?
         
         settings.isHandleLocked = false
@@ -113,7 +111,7 @@ window.addEventListener('DOMContentLoaded', ()=>{
       const offset = (distance < 50 || dir === 'left') ? 20 : -20
 
       chainActions(this, [
-        ...(this.hasReleasedCapsule ? [{
+        ...(settings.squirrel.isAtCollectionPoint ? [{
           action: a => {
             a.el.setAttribute('dir', 'right')
             a.el.setAttribute('pose', 'walk')
@@ -176,7 +174,7 @@ window.addEventListener('DOMContentLoaded', ()=>{
             a.el.setAttribute('pose', 'neutral')
             capsule.setPos({ x: 48, y: machineBottom.size.h - 50 })
             machineBottom.el.appendChild(capsule.el)
-            a.hasReleasedCapsule = true
+            a.isAtCollectionPoint = true
           },
         },
       ])
@@ -189,7 +187,7 @@ window.addEventListener('DOMContentLoaded', ()=>{
   }
 
   const getRandomToy = () => {
-    return ['bunny', 'duck-yellow', 'duck-pink', 'star', 'water-melon', 'panda', 'dino', 'roboto-san', 'roboto-sama', 'penguin', 'turtle'][randomN(11) - 1]
+    return ['bunny', 'citrus', 'sleepy-fruit', 'croquette', 'dino', 'panda', 'dino', 'broccoli', 'bear', 'penguin', 'turtle'][randomN(11) - 1]
   }
 
   class Capsule {
@@ -221,6 +219,7 @@ window.addEventListener('DOMContentLoaded', ()=>{
     }
     collect() {
       this.el.classList.add('enlarge')
+      settings.squirrel.el.setAttribute('pose', 'neutral')
       this.deg = nearest360(this.deg)
       const { width, height } = wrapper.getBoundingClientRect()
       const { left, top } = machineBottom.el.getBoundingClientRect()
@@ -342,6 +341,10 @@ window.addEventListener('DOMContentLoaded', ()=>{
 
 
   const grabHandle = e => {
+    if (settings.squirrel.isAtCollectionPoint && settings.isHandleLocked) {
+      settings.squirrel.el.setAttribute('pose', 'wave')
+      return
+    }
     if (settings.isHandleLocked) return
     const { top, left } = machineBottom.el.getBoundingClientRect()
     settings.isTurningHandle = true
@@ -369,7 +372,7 @@ window.addEventListener('DOMContentLoaded', ()=>{
   }
 
   const rotateHandle = e => {
-    if (!settings.isTurningHandle || settings.isHandleLocked) return
+    if (!settings.isTurningHandle) return
     const { top, left } = machineBottom.el.getBoundingClientRect()
   
     settings.prevHandleDeg = settings.handleDeg 
