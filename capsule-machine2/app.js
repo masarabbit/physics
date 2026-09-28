@@ -3,7 +3,6 @@ window.addEventListener('DOMContentLoaded', ()=>{
 
   //TODO mix up the capsules a bit more
   //TODO update the toys
-  // TODO maybe the squirrel jump sometimes
   //TODO make the machine responsive?
   class Vector {
     constructor({ x, y }) {
@@ -107,8 +106,6 @@ window.addEventListener('DOMContentLoaded', ()=>{
         settings.isHandleLocked = false
         return
       }
-
-      // const distance = capsule.distanceBetween({ x:  machineTop.size.w / 2 + 20, y: machineTop.size.h})
       const distance = Math.abs(capsule.pos.x - machineTop.size.w / 2 + 20)
       const walkDelay = distance * 10
 
@@ -159,22 +156,28 @@ window.addEventListener('DOMContentLoaded', ()=>{
         {
           action: a => {
             a.el.setAttribute('dir',  capsule.pos.x > (capsule.pos.x + offset) ? 'right' : 'left')
-            machineTop.el.style.setProperty('--hide-pos', machineTop.size.h + 'px')
             a.el.setAttribute('pose', 'grab')
-            a.el.style.setProperty('--animation-delay', isJumpGrabbing ? '0.3s' : '0.5s') 
           },
           delay: isJumpGrabbing ? 300 : 500,
         },
         {
-          action: () => capsule.remove(),
+          action: a => {
+            a.setPos({
+              x: a.pos.x,
+              y: machineTop.size.h + 100
+            })
+            capsule.setPos({
+              x: capsule.pos.x,
+              y: machineTop.size.h + (100 - 32)
+            })
+            capsule.remove()
+          },
           delay: 900,
         },
         {
           action: a => {
             capsule.setPos({ x: -52, y: -30 })
             a.el.appendChild(capsule.el)
-            capsule.el.classList.remove('disappear')
-        
             a.setPos({ x: machineBottom.size.w + 200, y: machineBottom.size.h - 20 })
             a.el.setAttribute('pose', 'roll')
             machineBottom.el.appendChild(a.el)
@@ -345,7 +348,6 @@ window.addEventListener('DOMContentLoaded', ()=>{
       this.setPos()
     }
     remove() {
-      this.el.classList.add('disappear')
       settings.capsules = settings.capsules.filter(c => c !== this) 
       setTimeout(()=> {
         settings.selectedCapsule = this
