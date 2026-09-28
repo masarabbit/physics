@@ -163,7 +163,8 @@ body {
 }
 
 [dir='right'][pose='walk'] .squirrel,
-[dir='right'][pose='grab'] .squirrel{
+[dir='right'][pose='grab'] .squirrel,
+[dir='right'][pose='jump-grab'] .squirrel {
   --offset: -1;
 }
 
@@ -194,7 +195,7 @@ body {
     transform: translateY(0) scale(var(--offset), 1);
   }
   100% {
-    transform: translateY(var(--height)) scale(var(--offset), 1);
+    transform: translateY(var(--hide-pos)) scale(var(--offset), 1);
   }
 }
 
@@ -203,7 +204,7 @@ body {
     top: 0;
   }
   100% {
-    top: calc(var(--height) + 20px);
+    top: var(--hide-pos);
   }
 }
 
@@ -232,9 +233,21 @@ body {
 [pose='grab'] .squirrel {
   --frame-no: 1;
   background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABsAAAAiCAYAAACuoaIwAAABjUlEQVR4AeyWSXbDIAxASdfd9aI9Si/aXfepvizpYSCAQ91kkbzIEpq+Bc7wlv7x9RSwa2fgXqxTllJrsuvX9w9Fraa9GDVdKWHeLDWAvVgX4sES5v5T9Av2J9tabuPl8+M9GmcPSTwcBC3ngn1EchiP+q4pjQAi2C621nz3zWiHKcSazNTpR8PygU7VOGwqeTUJmE51b6Mj0wFTjh262q3LKG41bGku5t5UwLbl0lV3iEldpBtgUds7YCRsrpSYAvE1Oo+zLqUVN18AA+bFQEhCsBGPreoKBsSbYiO+XtXADn8TOJSpkdkbAhZnRKE3GmnL7d5omQNs9xSRUEoLbNPE4bdySh+wnY8mpewSsgV52XJoVrBhxUICMP1ZYevu6cN0s7XAYHDQS1CajMRhkcedxmLBsGkZIrpUsIicYDwUpud2wlDacnoyOwMtyi/4y3PGJzm785J1878+/inxpqJ1R0TrV58UVyDxNWFaSNCFJmJXfvHlbwAuuT/sW9uojYEgkk0TUemWn9hQfgEAAP//NwolswAAAAZJREFUAwDRq6Q/gapTwwAAAABJRU5ErkJggg==);
-  animation: hide forwards 0.5s;
-  animation-delay: 0.5s;
+  animation: hide forwards 0.9s;
+  animation-delay: var(--animation-delay);
   transform: scale(var(--offset), 1);
+}
+
+[pose='jump-grab'] .squirrel {
+  --frame-no: 1;
+  --w: 20px;
+  --h: 43px;
+  background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAArCAYAAAB4pah1AAABh0lEQVR4AdyUMXLEIAxFvanT5aI5Si6aLv1GT8NnhC0wZl1tZj8CJD0kG+dju/nvDPi8et4I+Pz5/YPXg6b7PaBgWwcq/wHaA1JZT4Klh60Aewf5/nsBeQH1+dHf99cn5sEg7Vs+JBHIm5ZYowzGfgT66STiOFOJ8wJibATG/ak5UGTBgM1sm4BeXWnDHauDgFP5vQNjlQ2wOBxOMvLFhaECSUbkYoEj5oh91tiRAPrzIxiRjFUSc6T1mQXYxJAMtNm8sDgAyX0FCvCRVTQLJRdZIQ9TvYddKEGZgJiASB5GhT6xIYXafvqjA3PUL8Tm/otA/w9sp7pjZsigDRBICWK6pAZ4pTqdVgqorTdABb1il4Gxm1jlMhBIhKqrZSCADLoHDu9iVhHgqD0w+q7O+WLqpxeTh1XGQOb7tu+sEH5aIY60yn01BCL2zfrlHlXYQGdeiEG7FeJDDi0w5v7gcfQ0qlA5QJDWQzsDHALk1HO8DSjwewJ52+qwWt2E1ZYdCkQyst+EfwAAAP//VAOQ8gAAAAZJREFUAwCSRp9T0YclqAAAAABJRU5ErkJggg==);
+  transform: scale(var(--offset), 1);
+}
+
+[pose='jump-grab'] {
+  transition: var(--jump-speed);
 }
 
 [pose='wave'] .squirrel {
@@ -244,7 +257,7 @@ body {
 } 
 
 .disappear {
-  animation: hide-capsule forwards 0.5s;
+  animation: hide-capsule forwards 0.9s;
 }
 
 .background-wrapper {
@@ -303,7 +316,7 @@ body {
   --w: 40px;
   --h: 40px;
   --m: 4;
-    width: calc(var(--w) * var(--m));
+  width: calc(var(--w) * var(--m));
   height: calc(var(--h) * var(--m));
   transition: 0.5s;
   background-size: cover;
