@@ -2,7 +2,6 @@
 window.addEventListener('DOMContentLoaded', ()=>{
 
   //TODO mix up the capsules a bit more
-  //TODO update the toys
   //TODO make the machine responsive?
   class Vector {
     constructor({ x, y }) {
@@ -69,13 +68,6 @@ window.addEventListener('DOMContentLoaded', ()=>{
     handleDeg: 0,
   }
 
-  const chainActions = (actor, actions, i = 0) => {
-    actions[i].action(actor)
-    if (i < actions.length - 1) setTimeout(()=> {
-      chainActions(actor, actions, i + 1)
-    }, actions[i].delay || 0)
-  }
-
   class Squirrel {
     constructor(){
       this.el = Object.assign(document.createElement('div'), {
@@ -86,67 +78,99 @@ window.addEventListener('DOMContentLoaded', ()=>{
      
       this.setPos({ x: machineTop.size.w / 2, y: machineTop.size.h })
     }
+    chainActions = (actions, i = 0) => {
+      actions[i].action(this)
+      if (i < actions.length - 1) setTimeout(()=> {
+        this.chainActions(actions, i + 1)
+      }, actions[i].delay || 0)
+    }
     getNearestCapsule(pos) {
       if (Math.random() > 0.3) {
         const filteredCapsules = settings.capsules.filter(c => c.pos.y > machineTop.size.h - 64)
           .map(c => ({ dist: c.distanceBetween(pos), id: c.id }))
         const selectedId = filteredCapsules[Math.floor(Math.random() * filteredCapsules.length)]?.id
-
         return settings.capsules.find(c => c.id === selectedId)
       }
-  
       return settings.capsules[Math.floor(Math.random() * settings.capsules.length)]
     }
     popUp() {
       const capsule = this.getNearestCapsule({ x: machineTop.size.w / 2, y: machineTop.size.h })
+
+      const walkBack = {
+        action: s => {
+          s.el.setAttribute('dir', 'right')
+          s.el.setAttribute('pose', 'walk')
+          s.setPos({ x: machineBottom.size.w + 200, y: machineBottom.size.h })
+        },
+        delay: 2000,
+      }
+      const jumpOut = {
+        action: s => {
+          s.setPos({ x: machineTop.size.w / 2 + 20, y: machineTop.size.h })
+          machineTop.el.appendChild(s.el)
+          s.el.setAttribute('pose', 'jump-up')
+        },
+        delay: 650,
+      }
+
       if (!capsule) {
-        console.log('test')
-        // TODO trigger alternative animation when nothing is left to pick?
-        
-        settings.isHandleLocked = false
+        this.chainActions([
+          ...(settings.squirrel.isAtCollectionPoint ? [walkBack] : []),
+          jumpOut,
+          {
+            action: s => {
+              s.el.setAttribute('pose', 'neutral')
+              s.el.setAttribute('dir', 'left')
+              settings.squirrel.isAtCollectionPoint  = false
+            },
+            delay: 1000,
+          },
+          {
+            action: s => s.el.setAttribute('pose', 'look-around'),
+            delay: 3000,
+          },
+          {
+            action: s => s.el.setAttribute('pose', 'neutral'),
+            delay: 1000,
+          },
+          {
+            action: s => {
+              s.el.setAttribute('pose', 'walk')
+              s.setPos({
+                x: s.pos.x,
+                y: machineTop.size.h + 100
+              })
+              settings.isHandleLocked = false
+            },
+          }
+        ])
         return
       }
       const distance = Math.abs(capsule.pos.x - machineTop.size.w / 2 + 20)
-      const walkDelay = distance * 10
-
       const dir = capsule.pos.x > machineTop.size.w / 2 ? 'right' : 'left'
       const offset = (distance < 50 || dir === 'left') ? 20 : -20
       const isJumpGrabbing = (machineTop.size.h - capsule.pos.y) > 45
 
-      chainActions(this, [
-        ...(settings.squirrel.isAtCollectionPoint ? [{
-          action: a => {
-            a.el.setAttribute('dir', 'right')
-            a.el.setAttribute('pose', 'walk')
-            a.setPos({ x: machineBottom.size.w + 200, y: machineBottom.size.h })
-          },
-          delay: 2000,
-        }] : []),
-        {
-          action: a => {
-            a.setPos({ x: machineTop.size.w / 2 + 20, y: machineTop.size.h })
-            machineTop.el.appendChild(a.el)
-            a.el.setAttribute('pose', 'jump-up')
-          },
-          delay: 650,
-        },
+      this.chainActions([
+        ...(settings.squirrel.isAtCollectionPoint ? [walkBack] : []),
+        jumpOut,
         ...(distance > 50 ? [{
-          action: a => {
-            a.el.setAttribute('dir',  dir)
-            a.el.setAttribute('pose', 'walk')
-            a.setPos({
+          action: s => {
+            s.el.setAttribute('dir',  dir)
+            s.el.setAttribute('pose', 'walk')
+            s.setPos({
               x: capsule.pos.x + offset,
-              y: a.pos.y
+              y: s.pos.y
             })
           },
-          delay: walkDelay,
+          delay: distance * 10,
         }]: []),
         ...(isJumpGrabbing ? [{
-          action: a => {
-            a.el.setAttribute('dir',  capsule.pos.x > (capsule.pos.x + offset) ? 'right' : 'left')
-            a.el.setAttribute('pose', 'jump-grab')
-            a.el.style.setProperty('--jump-speed', `${Math.abs(a.pos.y - capsule.pos.y) / 220}s`) 
-            a.setPos({
+          action: s => {
+            s.el.setAttribute('dir',  capsule.pos.x > (capsule.pos.x + offset) ? 'right' : 'left')
+            s.el.setAttribute('pose', 'jump-grab')
+            s.el.style.setProperty('--jump-speed', `${Math.abs(s.pos.y - capsule.pos.y) / 220}s`) 
+            s.setPos({
               x: capsule.pos.x + offset,
               y: capsule.pos.y + 40
             })
@@ -154,16 +178,16 @@ window.addEventListener('DOMContentLoaded', ()=>{
           delay: Math.abs(machineTop.size.h - capsule.pos.y) * 5,
         }]:[]),
         {
-          action: a => {
-            a.el.setAttribute('dir',  capsule.pos.x > (capsule.pos.x + offset) ? 'right' : 'left')
-            a.el.setAttribute('pose', 'grab')
+          action: s => {
+            s.el.setAttribute('dir',  capsule.pos.x > (capsule.pos.x + offset) ? 'right' : 'left')
+            s.el.setAttribute('pose', 'grab')
           },
           delay: isJumpGrabbing ? 300 : 500,
         },
         {
-          action: a => {
-            a.setPos({
-              x: a.pos.x,
+          action: s => {
+            s.setPos({
+              x: s.pos.x,
               y: machineTop.size.h + 100
             })
             capsule.setPos({
@@ -175,29 +199,29 @@ window.addEventListener('DOMContentLoaded', ()=>{
           delay: 900,
         },
         {
-          action: a => {
+          action: s => {
             capsule.setPos({ x: -52, y: -30 })
-            a.el.appendChild(capsule.el)
-            a.setPos({ x: machineBottom.size.w + 200, y: machineBottom.size.h - 20 })
-            a.el.setAttribute('pose', 'roll')
-            machineBottom.el.appendChild(a.el)
+            s.el.appendChild(capsule.el)
+            s.setPos({ x: machineBottom.size.w + 200, y: machineBottom.size.h - 20 })
+            s.el.setAttribute('pose', 'roll')
+            machineBottom.el.appendChild(s.el)
           },
           delay: 500,
         },
         {
-          action: a => {
+          action: s => {
             capsule.deg -= 360
             capsule.setPos()
-            a.setPos({ x: 100, y: machineBottom.size.h - 20 })
+            s.setPos({ x: 100, y: machineBottom.size.h - 20 })
           },
           delay: 2000,
         },
         {
-          action: a => {
-            a.el.setAttribute('pose', 'neutral')
+          action: s => {
+            s.el.setAttribute('pose', 'neutral')
             capsule.setPos({ x: 48, y: machineBottom.size.h - 50 })
             machineBottom.el.appendChild(capsule.el)
-            a.isAtCollectionPoint = true
+            s.isAtCollectionPoint = true
           },
         },
       ])
@@ -210,7 +234,7 @@ window.addEventListener('DOMContentLoaded', ()=>{
   }
 
   const getRandomToy = () => {
-    return ['bunny', 'citrus', 'sleepy-fruit', 'croquette', 'dino', 'panda', 'dino', 'broccoli', 'bear', 'penguin', 'turtle'][randomN(11) - 1]
+    return ['blue-hat', 'citrus', 'sleepy-fruit', 'croquette', 'dino', 'panda', 'dino', 'broccoli', 'bear', 'pink-duck', 'cucumber'][randomN(11) - 1]
   }
 
   class Capsule {
@@ -298,7 +322,7 @@ window.addEventListener('DOMContentLoaded', ()=>{
         this.velocity.x *= settings.bounce
       }
       if (this.pos.y + (settings.radius + buffer) > machineTop.size.h) {
-        this.pos.y = machineTop.size.h - settings.radius - buffer
+        this.pos.y = machineTop.size.h - settings.radius
         this.velocity.y *= settings.bounce
       }
       if (this.pos.y - settings.radius < 0) {
@@ -356,16 +380,13 @@ window.addEventListener('DOMContentLoaded', ()=>{
     }
   }
 
-
   new Array(20).fill('').forEach((_, i)=> new Capsule({ id: i, pos: {x: (i % 5) * 64 + settings.radius, y: Math.floor(i / 5) * 64 + settings.radius}}))
-
 
   setInterval(() => {
     settings.capsules.forEach(c => c.move())
   }, 100)
 
   settings.squirrel = new Squirrel()
-
 
   const grabHandle = e => {
     if (settings.squirrel.isAtCollectionPoint && settings.isHandleLocked) {
