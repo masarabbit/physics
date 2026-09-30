@@ -380,7 +380,15 @@ window.addEventListener('DOMContentLoaded', ()=>{
     }
   }
 
-  new Array(20).fill('').forEach((_, i)=> new Capsule({ id: i, pos: {x: (i % 5) * 64 + settings.radius, y: Math.floor(i / 5) * 64 + settings.radius}}))
+  new Array(20).fill('').forEach((_, i)=> new Capsule(
+    { 
+      id: i, 
+      pos: {
+        x: (i % 5) * 64 + settings.radius + (i % 2 === 0 ? settings.radius : 0),
+        y: Math.floor(i / 5) * 64 + settings.radius
+      }
+    }
+  ))
 
   setInterval(() => {
     settings.capsules.forEach(c => c.move())
