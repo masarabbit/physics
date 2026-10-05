@@ -243,7 +243,7 @@ window.addEventListener('DOMContentLoaded', ()=>{
         className: 'capsule-wrapper',
         innerHTML: 
           '<div class="capsule">' +
-          `<div class="lid"></div><div class="base ${['red', 'pink', 'blue', 'white'][Math.floor(Math.random() * 4)]}"></div>` +
+          `<div class="lid"></div><div class="base ${['grey', 'pink', 'blue', 'white'][Math.floor(Math.random() * 4)]}"></div>` +
           `<div class="toy ${getRandomToy()}"></div>` +
           '</div>'
       })
