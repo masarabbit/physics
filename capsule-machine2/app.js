@@ -61,7 +61,7 @@ window.addEventListener('DOMContentLoaded', ()=>{
     friction: 0.9,
     bounce: -0.4,
     gravity: 4,
-    radius: 36,
+    capsuleRadius: 36,
     isTurningHandle: false,
     isHandleLocked: false,
     prevHandleDeg: 0,
@@ -84,7 +84,7 @@ window.addEventListener('DOMContentLoaded', ()=>{
         this.chainActions(actions, i + 1)
       }, actions[i].delay || 0)
     }
-    getNearestCapsule(pos) {
+    pickCapsule(pos) {
       if (Math.random() > 0.3) {
         const filteredCapsules = settings.capsules.filter(c => c.pos.y > machineTop.size.h - 64)
           .map(c => ({ dist: c.distanceBetween(pos), id: c.id }))
@@ -94,7 +94,7 @@ window.addEventListener('DOMContentLoaded', ()=>{
       return settings.capsules[Math.floor(Math.random() * settings.capsules.length)]
     }
     popUp() {
-      const capsule = this.getNearestCapsule({ x: machineTop.size.w / 2, y: machineTop.size.h })
+      const capsule = this.pickCapsule({ x: machineTop.size.w / 2, y: machineTop.size.h })
 
       const walkBack = {
         action: s => {
@@ -154,7 +154,7 @@ window.addEventListener('DOMContentLoaded', ()=>{
       this.chainActions([
         ...(settings.squirrel.isAtCollectionPoint ? [walkBack] : []),
         jumpOut,
-        ...(distance > 50 ? [{
+        ...(distance > settings.capsuleRadius ? [{
           action: s => {
             s.el.setAttribute('dir',  dir)
             s.el.setAttribute('pose', 'walk')
@@ -313,29 +313,29 @@ window.addEventListener('DOMContentLoaded', ()=>{
     }
     hitCheckWalls() {
       const buffer = 8
-      if (this.pos.x + settings.radius + buffer > machineTop.size.w) {
-        this.pos.x = machineTop.size.w - (settings.radius + buffer)
+      if (this.pos.x + settings.capsuleRadius + buffer > machineTop.size.w) {
+        this.pos.x = machineTop.size.w - (settings.capsuleRadius + buffer)
         this.velocity.x *= settings.bounce
       }
-      if (this.pos.x - (settings.radius + buffer) < 0) {
-        this.pos.x = settings.radius + buffer
+      if (this.pos.x - (settings.capsuleRadius + buffer) < 0) {
+        this.pos.x = settings.capsuleRadius + buffer
         this.velocity.x *= settings.bounce
       }
-      if (this.pos.y + (settings.radius + buffer) > machineTop.size.h) {
-        this.pos.y = machineTop.size.h - settings.radius
+      if (this.pos.y + (settings.capsuleRadius + buffer) > machineTop.size.h) {
+        this.pos.y = machineTop.size.h - settings.capsuleRadius
         this.velocity.y *= settings.bounce
       }
-      if (this.pos.y - settings.radius < 0) {
-        this.pos.y = settings.radius
+      if (this.pos.y - settings.capsuleRadius < 0) {
+        this.pos.y = settings.capsuleRadius
         this.velocity.y *= settings.bounce
       }}
     spaceOutObjects() {
       settings.capsules.forEach(o => {
         if (this === o) return
         const distanceBetweenCapsules = this.distanceBetween(o.pos)
-        if (distanceBetweenCapsules < (settings.radius * 2)) {
+        if (distanceBetweenCapsules < (settings.capsuleRadius * 2)) {
           this.velocity.multiplyXy(0.9)
-          const overlap = distanceBetweenCapsules - (settings.radius * 2)
+          const overlap = distanceBetweenCapsules - (settings.capsuleRadius * 2)
           const  { x, y } = this.getNewPosBasedOnTarget({
               el: o,
               distance: overlap / 2, 
@@ -384,8 +384,8 @@ window.addEventListener('DOMContentLoaded', ()=>{
     { 
       id: i, 
       pos: {
-        x: (i % 5) * 64 + settings.radius + (i % 2 === 0 ? settings.radius : 0),
-        y: Math.floor(i / 5) * 64 + settings.radius
+        x: (i % 5) * 64 + settings.capsuleRadius + (i % 2 === 0 ? settings.capsuleRadius : 0),
+        y: Math.floor(i / 5) * 64 + settings.capsuleRadius
       }
     }
   ))
