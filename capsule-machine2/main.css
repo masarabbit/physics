@@ -13,6 +13,7 @@ body {
   /* background-color: #bddfdf; */
   background-color: #b4e7ce;
   overscroll-behavior: contain;
+  touch-action: none;
 }
 
 .wrapper {

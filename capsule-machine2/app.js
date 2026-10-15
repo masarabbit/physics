@@ -397,6 +397,7 @@ window.addEventListener('DOMContentLoaded', ()=>{
   settings.squirrel = new Squirrel()
 
   const grabHandle = e => {
+    e.target.setPointerCapture(e.pointerId)
     if (settings.squirrel.isAtCollectionPoint && settings.isHandleLocked) {
       settings.squirrel.el.setAttribute('pose', 'wave')
       return
