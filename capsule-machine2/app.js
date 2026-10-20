@@ -1,6 +1,5 @@
 
 window.addEventListener('DOMContentLoaded', ()=>{
-
   class Vector {
     constructor({ x, y }) {
       Object.assign(this, { x, y })
@@ -262,23 +261,35 @@ window.addEventListener('DOMContentLoaded', ()=>{
       })
       this.el.addEventListener('click', ()=> {
         if (settings.isCollecting) return
+        this.remove()
         this.collect()
       })
     }
     collect() {
       settings.isCollecting = true
-      this.el.classList.add('enlarge')
-      settings.squirrel.el.setAttribute('pose', 'neutral')
+ 
       this.deg = nearest360(this.deg)
       const { width, height } = wrapper.getBoundingClientRect()
       const { left, top } = machineBottom.el.getBoundingClientRect()
-      this.setPos({
-        x: width / 2 - left, y: height / 2 - top
-      })
       setAngle({
         el: this.toy,
         deg: 0
       })
+
+      const vars = {
+        'start-x': this.pos.x + 'px',
+        'start-y': this.pos.y + 'px',
+        'start-deg': this.deg + 'deg',
+        'end-x': width / 2 - left + 'px',
+        'end-y': height / 2 - top + 'px',
+      }
+
+      Object.keys(vars).forEach(v => {
+        this.el.style.setProperty(`--${v}`, vars[v])
+      })
+
+      this.el.classList.add('enlarge')
+      settings.squirrel.el.setAttribute('pose', 'neutral')
       setTimeout(()=> {
         collectionBox.appendChild(this.toy)
         this.el.remove()
@@ -310,7 +321,7 @@ window.addEventListener('DOMContentLoaded', ()=>{
         `translate(${x}px, ${y}px) rotate(${this.deg || 0}deg`
     }
     hitCheckWalls() {
-      const buffer = 8
+      const buffer = 5
       if (this.pos.x + settings.capsuleRadius + buffer > machineTop.size.w) {
         this.pos.x = machineTop.size.w - (settings.capsuleRadius + buffer)
         this.velocity.x *= settings.bounce
@@ -373,7 +384,6 @@ window.addEventListener('DOMContentLoaded', ()=>{
       setTimeout(()=> {
         settings.selectedCapsule = this
       }, 500)
-  
     }
   }
 
