@@ -1,8 +1,6 @@
 
 window.addEventListener('DOMContentLoaded', ()=>{
 
-  //TODO mix up the capsules a bit more
-  //TODO make the machine responsive?
   class Vector {
     constructor({ x, y }) {
       Object.assign(this, { x, y })
@@ -38,13 +36,13 @@ window.addEventListener('DOMContentLoaded', ()=>{
   const machineTop = {
     el: document.querySelector('.top'),
   }
-  const {width, height} = machineTop.el.getBoundingClientRect()
+  const { width, height } = machineTop.el.getBoundingClientRect()
   machineTop.size = { w: width, h: height }
 
    const machineBottom = {
     el: document.querySelector('.bottom'),
   }
-  const {width: bottomWidth, height: bottomHeight } = machineBottom.el.getBoundingClientRect()
+  const { width: bottomWidth, height: bottomHeight } = machineBottom.el.getBoundingClientRect()
   machineBottom.size = { w: bottomWidth, h: bottomHeight }
 
   const handleAxis = () => {
@@ -368,7 +366,6 @@ window.addEventListener('DOMContentLoaded', ()=>{
           })
         }
       }
-  
       this.setPos()
     }
     remove() {
